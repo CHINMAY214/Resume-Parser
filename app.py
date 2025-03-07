@@ -4,6 +4,9 @@ import PyPDF2
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from rapidfuzz import process
+import matplotlib.pyplot as plt
+from collections import Counter
 
 def extract_text_from_pdf(pdf_file):
     """Extract text from an uploaded PDF file."""
@@ -52,27 +55,12 @@ def match_resumes_to_jobs(resume_texts, job_descriptions):
 
     similarity_matrix = cosine_similarity(resume_vectors, job_vectors)
     return similarity_matrix
-from rapidfuzz import process
 
 def match_skills(text, skill_list):
+    """Fuzzy match skills using RapidFuzz."""
     words = re.findall(r'\b\w+\b', text.lower())
     matched_skills = [process.extractOne(word, skill_list)[0] for word in words if process.extractOne(word, skill_list)[1] > 80]
     return list(set(matched_skills))
-
-job_titles = ["Data Analyst", "Machine Learning Engineer", "Software Developer", "Python Developer"]
-matches = [title for title in job_titles if title.lower() in resume_texts.lower()]
-
-job_description = st.text_area("Paste a Job Description", "")
-if job_description:
-    similarity_score = match_resumes_to_jobs([resume_texts], [job_description])
-    st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
-
-import matplotlib.pyplot as plt
-from collections import Counter
-
-skill_counts = Counter(extracted_skills)
-plt.bar(skill_counts.keys(), skill_counts.values())
-st.pyplot()
 
 # Streamlit UI
 st.title("Resume Analyzer & Job Matching")
@@ -82,21 +70,31 @@ uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
 if uploaded_file is not None:
     st.subheader("Extracted Information")
     resume_text = extract_text_from_pdf(uploaded_file)
-    
+
     extracted_skills = extract_skills(resume_text)
     extracted_experience = extract_experience(resume_text)
 
     st.write("**Extracted Skills:**", extracted_skills)
     st.write("**Extracted Experience:**", extracted_experience)
 
-    job_descriptions = [
-        "Looking for a Python developer with experience in machine learning and SQL.",
-        "Data analyst role requiring expertise in Excel, SQL, and data visualization."
-    ]
+    # Job title matching (Fixed: Uses resume_text)
+    job_titles = ["Data Analyst", "Machine Learning Engineer", "Software Developer", "Python Developer"]
+    matches = [title for title in job_titles if title.lower() in resume_text.lower()]
+    st.write("**Matched Job Titles:**", matches if matches else "No matches found")
 
-    similarity_scores = match_resumes_to_jobs([resume_text], job_descriptions)
+    # Job description matching
+    job_description = st.text_area("Paste a Job Description", "")
+    if job_description:
+        similarity_score = match_resumes_to_jobs([resume_text], [job_description])
+        st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
 
-    st.subheader("Job Matching Scores")
-    for i, job in enumerate(job_descriptions):
-        st.write(f"**Job {i+1}:** {job}")
-        st.write(f"**Matching Score:** {similarity_scores[0][i]:.2f}")
+    # Skill visualization
+    skill_counts = Counter(extracted_skills)
+    if skill_counts:
+        plt.bar(skill_counts.keys(), skill_counts.values())
+        st.pyplot()
+    else:
+        st.write("No skills extracted to display.")
+
+else:
+    st.warning("Please upload a resume first.")  # Prevents `resume_text` from being used before assignment
