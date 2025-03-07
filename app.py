@@ -82,17 +82,9 @@ if uploaded_file is not None:
     matches = [title for title in job_titles if title.lower() in resume_text.lower()]
     st.write("**Matched Job Titles:**", matches if matches else "No matches found")
 
-    # Job description matching
-    job_description = st.text_area("Paste a Job Description", "")
-    if job_description:
-        similarity_score = match_resumes_to_jobs([resume_text], [job_description])
-        st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
-
-    # Skill visualization (Fixed)
-if uploaded_file is not None:  # Ensuring resume is uploaded before using extracted_skills
+        # Skill visualization
     skill_counts = Counter(extracted_skills)
-
-    if skill_counts:  # ✅ FIXED INDENTATION
+    if skill_counts:
         fig, ax = plt.subplots()  # Create a figure and axis
         ax.bar(skill_counts.keys(), skill_counts.values())  # Plot the bar chart
         ax.set_xlabel("Skills")
@@ -102,5 +94,11 @@ if uploaded_file is not None:  # Ensuring resume is uploaded before using extrac
     else:
         st.write("No skills extracted to display.")
 
+    # Button to enable job description input
+    if st.button("Get Matching Score"):
+        job_description = st.text_area("Paste a Job Description", "")
+        if job_description:
+            similarity_score = match_resumes_to_jobs([resume_text], [job_description])
+            st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
 else:
     st.warning("Please upload a resume first.")  # Prevents `resume_text` from being used before assignment
