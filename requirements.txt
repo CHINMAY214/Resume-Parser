@@ -4,6 +4,3 @@ PyPDF2==3.0.1
 scikit-learn==1.4.0
 numpy==1.26.4
 pandas==2.2.1
-torch  
-spacy[transformers] 
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.2/en_core_web_sm-3.7.2.tar.gz
