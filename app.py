@@ -60,11 +60,11 @@ def match_skills(text, skill_list):
     return list(set(matched_skills))
 
 job_titles = ["Data Analyst", "Machine Learning Engineer", "Software Developer", "Python Developer"]
-matches = [title for title in job_titles if title.lower() in resume_text.lower()]
+matches = [title for title in job_titles if title.lower() in resume_texts.lower()]
 
 job_description = st.text_area("Paste a Job Description", "")
 if job_description:
-    similarity_score = match_resumes_to_jobs([resume_text], [job_description])
+    similarity_score = match_resumes_to_jobs([resume_texts], [job_description])
     st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
 
 import matplotlib.pyplot as plt
