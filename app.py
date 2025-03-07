@@ -59,6 +59,20 @@ def match_skills(text, skill_list):
     matched_skills = [process.extractOne(word, skill_list)[0] for word in words if process.extractOne(word, skill_list)[1] > 80]
     return list(set(matched_skills))
 
+job_titles = ["Data Analyst", "Machine Learning Engineer", "Software Developer", "Python Developer"]
+matches = [title for title in job_titles if title.lower() in resume_text.lower()]
+
+job_description = st.text_area("Paste a Job Description", "")
+if job_description:
+    similarity_score = match_resumes_to_jobs([resume_text], [job_description])
+    st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
+
+import matplotlib.pyplot as plt
+from collections import Counter
+
+skill_counts = Counter(extracted_skills)
+plt.bar(skill_counts.keys(), skill_counts.values())
+st.pyplot()
 
 # Streamlit UI
 st.title("Resume Analyzer & Job Matching")
