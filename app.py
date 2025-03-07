@@ -52,9 +52,16 @@ def match_resumes_to_jobs(resume_texts, job_descriptions):
 
     similarity_matrix = cosine_similarity(resume_vectors, job_vectors)
     return similarity_matrix
+from rapidfuzz import process
+
+def match_skills(text, skill_list):
+    words = re.findall(r'\b\w+\b', text.lower())
+    matched_skills = [process.extractOne(word, skill_list)[0] for word in words if process.extractOne(word, skill_list)[1] > 80]
+    return list(set(matched_skills))
+
 
 # Streamlit UI
-st.title("Resume Analyzer & Job Matching (Without spaCy)")
+st.title("Resume Analyzer & Job Matching")
 
 uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
 
