@@ -22,12 +22,6 @@ st.markdown(
         border-radius: 10px;
         color: white;
     }
-    .stButton > button {
-        border-radius: 8px;
-        background-color: #4CAF50;
-        color: white;
-        font-size: 18px;
-    }
     .stTextArea textarea {
         background-color: #f0f0f0;
         border-radius: 5px;
@@ -47,8 +41,17 @@ def extract_text_from_pdf(pdf_file):
     return text
 
 def extract_skills(text):
+    skill_keywords = {
+        "python", "sql", "mysql", "machine learning", "deep learning", "nlp", "data science",
+        "data analysis", "excel", "power bi", "tableau", "streamlit", "tensorflow", "pytorch",
+        "azure", "aws", "gcp", "c++", "java", "r", "statistics", "data visualization", "big data",
+        "business intelligence", "cloud computing", "hadoop", "spark", "flask", "django",
+        "kubernetes", "docker", "devops", "git", "linux", "bash", "etl", "mongodb", "postgresql",
+        "data wrangling", "data preprocessing", "feature engineering", "mlops", "cybersecurity"
+    }
     words = re.findall(r'\b\w+\b', text.lower())
-    return set(words)
+    extracted_skills = set(words).intersection(skill_keywords)
+    return extracted_skills
 
 def extract_experience(text):
     experience_patterns = [r'(\d+)\s*years?', r'(\d+)\s*months?']
@@ -93,44 +96,42 @@ if uploaded_file is not None:
     st.write("**Extracted Skills:**", extracted_skills)
     st.write("**Extracted Experience:**", extracted_experience)
 
-    col1, col2, col3 = st.columns(3)
+    # Sidebar options
+    option = st.sidebar.radio("Choose an option:", ["Get Matching Score", "Get Job Recommendations", "Show Visualizations"])
 
-    with col1:
-        if st.button("Get Matching Score"):
-            job_description = st.text_area("Paste a Job Description", "")
-            if job_description:
-                similarity_score = match_resumes_to_jobs([resume_text], [job_description])
-                st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
+    if option == "Get Matching Score":
+        job_description = st.text_area("Paste a Job Description", "")
+        if job_description:
+            similarity_score = match_resumes_to_jobs([resume_text], [job_description])
+            st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
 
-    with col2:
-        if st.button("Get Job Recommendations"):
-            job_df = load_job_data()
-            recommended_jobs = recommend_jobs(extracted_skills, job_df)
-            st.subheader("Recommended Job Postings")
-            if recommended_jobs:
-                for job, company, match_count, missing_skills in recommended_jobs[:10]:
-                    st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
-                    st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
-            else:
-                st.write("No suitable job recommendations found.")
+    elif option == "Get Job Recommendations":
+        job_df = load_job_data()
+        recommended_jobs = recommend_jobs(extracted_skills, job_df)
+        st.subheader("Recommended Job Postings")
+        if recommended_jobs:
+            for job, company, match_count, missing_skills in recommended_jobs[:10]:
+                st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
+                st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
+        else:
+            st.write("No suitable job recommendations found.")
 
-    with col3:
-        if st.button("Show Visualizations"):
-            job_df = load_job_data()
-            recommended_jobs = recommend_jobs(extracted_skills, job_df)
-            missing_skills_counter = Counter()
-            for _, _, _, missing_skills in recommended_jobs:
-                missing_skills_counter.update(missing_skills)
+    elif option == "Show Visualizations":
+        job_df = load_job_data()
+        recommended_jobs = recommend_jobs(extracted_skills, job_df)
+        missing_skills_counter = Counter()
+        for _, _, _, missing_skills in recommended_jobs:
+            missing_skills_counter.update(missing_skills)
 
-            if missing_skills_counter:
-                fig, ax = plt.subplots()
-                ax.bar(missing_skills_counter.keys(), missing_skills_counter.values(), color="#ff5733")
-                ax.set_xlabel("Missing Skills")
-                ax.set_ylabel("Frequency")
-                ax.set_title("Skills You Need to Improve")
-                plt.xticks(rotation=45)
-                st.pyplot(fig)
-            else:
-                st.write("No missing skills found.")
+        if missing_skills_counter:
+            fig, ax = plt.subplots()
+            ax.bar(missing_skills_counter.keys(), missing_skills_counter.values(), color="#ff5733")
+            ax.set_xlabel("Missing Skills")
+            ax.set_ylabel("Frequency")
+            ax.set_title("Skills You Need to Improve")
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
+        else:
+            st.write("No missing skills found.")
 else:
     st.warning("Please upload a resume first.")
