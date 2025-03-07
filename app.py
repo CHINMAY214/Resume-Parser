@@ -88,21 +88,19 @@ if uploaded_file is not None:
         similarity_score = match_resumes_to_jobs([resume_text], [job_description])
         st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
 
-    # Skill visualization
-    import matplotlib.pyplot as plt
+    # Skill visualization (Fixed)
+if uploaded_file is not None:  # Ensuring resume is uploaded before using extracted_skills
+    skill_counts = Counter(extracted_skills)
 
-# Skill visualization (Fixed)
-skill_counts = Counter(extracted_skills)
-
-if skill_counts:
-    fig, ax = plt.subplots()  # Create a figure and axis
-    ax.bar(skill_counts.keys(), skill_counts.values())  # Plot the bar chart
-    ax.set_xlabel("Skills")
-    ax.set_ylabel("Frequency")
-    ax.set_title("Extracted Skills from Resume")
-    st.pyplot(fig)  # Pass the figure to Streamlit
-else:
-    st.write("No skills extracted to display.")
+    if skill_counts:  # ✅ FIXED INDENTATION
+        fig, ax = plt.subplots()  # Create a figure and axis
+        ax.bar(skill_counts.keys(), skill_counts.values())  # Plot the bar chart
+        ax.set_xlabel("Skills")
+        ax.set_ylabel("Frequency")
+        ax.set_title("Extracted Skills from Resume")
+        st.pyplot(fig)  # Pass the figure to Streamlit
+    else:
+        st.write("No skills extracted to display.")
 
 else:
     st.warning("Please upload a resume first.")  # Prevents `resume_text` from being used before assignment
