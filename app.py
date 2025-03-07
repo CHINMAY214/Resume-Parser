@@ -5,6 +5,17 @@ import spacy
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import subprocess
+
+# Check if spaCy model exists, if not, download it
+model_name = "en_core_web_sm"
+try:
+    nlp = spacy.load(model_name)
+except OSError:
+    subprocess.run(["python", "-m", "spacy", "download", model_name])
+    nlp = spacy.load(model_name)
+
+print("spaCy model loaded successfully!")
 
 # Load NLP model
 nlp = spacy.load("en_core_web_sm")
