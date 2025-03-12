@@ -95,7 +95,9 @@ def convert_docx_to_pdf(docx_path, pdf_path):
     
     doc = docx.Document(docx_path)
     for para in doc.paragraphs:
-        pdf.cell(200, 10, txt=para.text, ln=True, align='L')
+        # Remove emojis or non-Latin characters
+        clean_text = para.text.encode("latin-1", "ignore").decode("latin-1")
+        pdf.cell(200, 10, txt=clean_text, ln=True, align='L')
     
     pdf.output(pdf_path)
     return pdf_path
