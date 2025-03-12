@@ -82,14 +82,29 @@ def load_job_data():
 
 def recommend_jobs(extracted_skills, job_df):
     recommended_jobs = []
+
     for _, job in job_df.iterrows():
         job_skills = set(map(str.lower, job["skills"].split(", ")))
+
+        # Debug: Print comparison of extracted skills and job skills
+        st.write(f"🔍 Checking job: {job['Job Title']} at {job['Company']}")
+        st.write(f"🎯 Job Skills: {job_skills}")
+        st.write(f"✅ Your Skills: {extracted_skills}")
+        st.write("---")
+
         match_count = len(job_skills.intersection(extracted_skills))
         missing_skills = job_skills - extracted_skills
+
         if match_count > 0:
             recommended_jobs.append((job["Job Title"], job["Company"], match_count, missing_skills))
-    recommended_jobs.sort(key=lambda x: x[2], reverse=True)
+
+    recommended_jobs.sort(key=lambda x: x[2], reverse=True)  # Sort by match count
+
+    # Debug: Print final recommended jobs
+    st.write("📌 Final Recommendations:", recommended_jobs)
+    
     return recommended_jobs
+
 
 # Streamlit UI
 st.title("📄 Resume Analyzer & Job Matching")
