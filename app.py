@@ -170,8 +170,18 @@ elif option == "Get Matching Score":
 
 elif option == "Get Job Recommendations":
     job_df = load_job_data()
+
+    # Ensure extracted_skills is defined before using it
+    if 'extracted_skills' not in locals():
+        extracted_skills = set()  # Initialize as an empty set if not defined
+
     recommended_jobs = recommend_jobs(extracted_skills, job_df)
+    
     st.subheader("Recommended Job Postings")
-    for job, company, match_count, missing_skills in recommended_jobs[:10]:
-        st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
-        st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
+    if recommended_jobs:
+        for job, company, match_count, missing_skills in recommended_jobs[:10]:
+            st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
+            st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
+    else:
+        st.write("No suitable job recommendations found.")
+
