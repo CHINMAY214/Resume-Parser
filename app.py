@@ -96,7 +96,7 @@ st.title("📄 Resume Analyzer & Job Matching")
 
 # Sidebar options
 # Sidebar options (Add an empty option as the first choice)
-option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Resume Generator", "Get Matching Score", "Get Job Recommendations", "Show Visualizations"])
+option = st.sidebar.radio("Choose an option:", ["Resume Analyzer","Get Matching Score", "Get Job Recommendations", "Show Visualizations","Resume Generator",])
 
 # ============================= RESUME GENERATOR =============================
 if option == "Resume Generator":
@@ -161,6 +161,31 @@ elif option == "Resume Analyzer":
         st.write("**Extracted Skills:**", extracted_skills)
         st.write("**Extracted Experience:**", extracted_experience)
 
+# ============================= JOB RECOMMENDATIONS =============================
+
+elif option == "Get Job Recommendations":
+    job_df = load_job_data()
+
+    # Debug: Print job_df to check if data is loaded
+    st.write("📌 Job Data Preview:", job_df.head())
+
+    try:
+        if not extracted_skills:  # If it's None or empty, initialize it
+            extracted_skills = set()
+    except NameError:
+        extracted_skills = set()
+
+    recommended_jobs = recommend_jobs(extracted_skills, job_df)
+
+    st.subheader("Recommended Job Postings")
+    if recommended_jobs:
+        for job, company, match_count, missing_skills in recommended_jobs[:10]:
+            st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
+            st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
+    else:
+        st.warning("⚠️ No suitable job recommendations found.")
+
+
 # ============================= JOB MATCHING =============================
 elif option == "Get Matching Score":
     job_description = st.text_area("Paste a Job Description", "")
@@ -168,20 +193,4 @@ elif option == "Get Matching Score":
         similarity_score = match_resumes_to_jobs([resume_text], [job_description])
         st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
 
-elif option == "Get Job Recommendations":
-    job_df = load_job_data()
-
-    # Ensure extracted_skills is defined before using it
-    if 'extracted_skills' not in locals():
-        extracted_skills = set()  # Initialize as an empty set if not defined
-
-    recommended_jobs = recommend_jobs(extracted_skills, job_df)
-    
-    st.subheader("Recommended Job Postings")
-    if recommended_jobs:
-        for job, company, match_count, missing_skills in recommended_jobs[:10]:
-            st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
-            st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
-    else:
-        st.write("No suitable job recommendations found.")
 
