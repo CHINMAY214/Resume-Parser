@@ -88,6 +88,10 @@ def create_resume(name, email, phone, skills, experience, summary):
     return file_path
 
 # Convert DOCX to PDF
+def remove_non_latin1(text):
+    """Removes characters that are not in the Latin-1 encoding range."""
+    return re.sub(r'[^\x00-\xFF]+', '', text)
+
 def convert_docx_to_pdf(docx_path, pdf_path):
     pdf = FPDF()
     pdf.add_page()
@@ -95,9 +99,9 @@ def convert_docx_to_pdf(docx_path, pdf_path):
     
     doc = docx.Document(docx_path)
     for para in doc.paragraphs:
-        # Remove emojis or non-Latin characters
-        clean_text = para.text.encode("latin-1", "ignore").decode("latin-1")
-        pdf.cell(200, 10, txt=clean_text, ln=True, align='L')
+        # Ensure text is Latin-1 compliant
+        clean_text = remove_non_latin1(para.text)
+        pdf.multi_cell(200, 10, txt=clean_text, align='L')
     
     pdf.output(pdf_path)
     return pdf_path
