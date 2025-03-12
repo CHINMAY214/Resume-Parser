@@ -42,6 +42,13 @@ def extract_text_from_pdf(pdf_file):
         extracted_text = page.extract_text()
         if extracted_text:
             text += extracted_text + " "
+
+    # Debug: Show extracted text
+    st.write("📄 Extracted Resume Text:", text[:500])  # Show first 500 characters
+
+    if not text.strip():
+        st.error("⚠️ No text extracted! Ensure the resume is not image-based.")
+
     return text
 
 # Extract skills from resume
@@ -54,8 +61,12 @@ def extract_skills(text):
         "kubernetes", "docker", "devops", "git", "linux", "bash", "etl", "mongodb", "postgresql",
         "data wrangling", "data preprocessing", "feature engineering", "mlops", "cybersecurity"
     }
-    words = text.lower().split()
+    words = re.findall(r'\b\w+\b', text.lower())  # Extract words properly
     extracted_skills = set(words).intersection(skill_keywords)
+
+    # Debug: Show matched skills
+    st.write("✅ Extracted Skills:", extracted_skills)
+
     return extracted_skills
 
 # Extract experience from resume
@@ -82,15 +93,9 @@ def load_job_data():
 
 def recommend_jobs(extracted_skills, job_df):
     recommended_jobs = []
-
+    
     for _, job in job_df.iterrows():
         job_skills = set(map(str.lower, job["skills"].split(", ")))
-
-        # Debug: Print comparison of extracted skills and job skills
-        st.write(f"🔍 Checking job: {job['Job Title']} at {job['Company']}")
-        st.write(f"🎯 Job Skills: {job_skills}")
-        st.write(f"✅ Your Skills: {extracted_skills}")
-        st.write("---")
 
         match_count = len(job_skills.intersection(extracted_skills))
         missing_skills = job_skills - extracted_skills
@@ -99,25 +104,19 @@ def recommend_jobs(extracted_skills, job_df):
             recommended_jobs.append((job["Job Title"], job["Company"], match_count, missing_skills))
 
     recommended_jobs.sort(key=lambda x: x[2], reverse=True)  # Sort by match count
-
-    # Debug: Print final recommended jobs
-    st.write("📌 Final Recommendations:", recommended_jobs)
     
     return recommended_jobs
-
 
 # Streamlit UI
 st.title("📄 Resume Analyzer & Job Matching")
 
 # Sidebar options
-# Sidebar options (Add an empty option as the first choice)
-option = st.sidebar.radio("Choose an option:", ["Resume Analyzer","Get Matching Score", "Get Job Recommendations", "Show Visualizations","Resume Generator",])
+option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Get Matching Score", "Get Job Recommendations", "Show Visualizations", "Resume Generator"])
 
 # ============================= RESUME GENERATOR =============================
 if option == "Resume Generator":
     st.subheader("📝 Create a Resume Using Templates")
 
-    # Load available templates
     if not os.path.exists(TEMPLATE_PATH):
         os.makedirs(TEMPLATE_PATH)
 
@@ -142,19 +141,15 @@ if option == "Resume Generator":
                 "EXPERIENCE": experience
             }
 
-            # Fill the template
             template_path = os.path.join(TEMPLATE_PATH, selected_template)
             updated_doc = fill_template(template_path, user_data)
 
-            # Save the updated DOCX
             docx_path = "Generated_Resume.docx"
             updated_doc.save(docx_path)
 
-            # Convert to PDF
             pdf_path = "Generated_Resume.pdf"
             convert_docx_to_pdf(updated_doc, pdf_path)
 
-            # Download buttons
             with open(docx_path, "rb") as docx_file:
                 st.download_button("Download Resume (DOCX)", docx_file, file_name="Generated_Resume.docx")
 
@@ -177,19 +172,11 @@ elif option == "Resume Analyzer":
         st.write("**Extracted Experience:**", extracted_experience)
 
 # ============================= JOB RECOMMENDATIONS =============================
-
 elif option == "Get Job Recommendations":
     job_df = load_job_data()
-
-    # Debug: Print job_df to check if data is loaded
-    st.write("📌 Job Data Preview:", job_df.head())
-
-    try:
-        if not extracted_skills:  # If it's None or empty, initialize it
-            extracted_skills = set()
-    except NameError:
-        extracted_skills = set()
-
+    
+    extracted_skills = extracted_skills if 'extracted_skills' in locals() else set()
+    
     recommended_jobs = recommend_jobs(extracted_skills, job_df)
 
     st.subheader("Recommended Job Postings")
@@ -200,12 +187,9 @@ elif option == "Get Job Recommendations":
     else:
         st.warning("⚠️ No suitable job recommendations found.")
 
-
 # ============================= JOB MATCHING =============================
 elif option == "Get Matching Score":
     job_description = st.text_area("Paste a Job Description", "")
     if job_description:
         similarity_score = match_resumes_to_jobs([resume_text], [job_description])
         st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
-
-
