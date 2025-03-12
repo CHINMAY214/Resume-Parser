@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 from collections import Counter
+import re
 
 TEMPLATE_PATH = "templates/"
 
@@ -95,11 +96,7 @@ st.title("📄 Resume Analyzer & Job Matching")
 
 # Sidebar options
 # Sidebar options (Add an empty option as the first choice)
-option = st.sidebar.radio("Choose an option:", ["", "Resume Generator", "Resume Analyzer", "Get Matching Score", "Get Job Recommendations", "Show Visualizations"])
-
-# Ensure the user selects an option before showing content
-if option == "":
-    st.write("👈 Please select an option from the sidebar to proceed.")
+option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Resume Generator", "Get Matching Score", "Get Job Recommendations", "Show Visualizations"])
 
 # ============================= RESUME GENERATOR =============================
 if option == "Resume Generator":
