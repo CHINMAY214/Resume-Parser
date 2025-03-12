@@ -1,16 +1,39 @@
-import os
-import re
-import PyPDF2
 import streamlit as st
-import pandas as pd
 import docx
+from docx.shared import Pt
+import os
 from fpdf import FPDF
+import PyPDF2
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 from collections import Counter
 
-# Extract text from PDF
+TEMPLATE_PATH = "templates/"
+
+# Function to replace placeholders in a template
+def fill_template(template_path, user_data):
+    doc = docx.Document(template_path)
+    for para in doc.paragraphs:
+        for key, value in user_data.items():
+            if f"{{{key}}}" in para.text:  # Example: {NAME}, {EMAIL}
+                para.text = para.text.replace(f"{{{key}}}", value)
+    return doc
+
+# Function to convert DOCX to PDF
+def convert_docx_to_pdf(doc, pdf_path):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    for para in doc.paragraphs:
+        clean_text = para.text.encode("latin-1", "ignore").decode("latin-1")
+        pdf.multi_cell(200, 10, txt=clean_text, align='L')
+    
+    pdf.output(pdf_path)
+
+# Function to extract text from PDF resumes
 def extract_text_from_pdf(pdf_file):
     text = ""
     reader = PyPDF2.PdfReader(pdf_file)
@@ -20,7 +43,7 @@ def extract_text_from_pdf(pdf_file):
             text += extracted_text + " "
     return text
 
-# Extract skills
+# Extract skills from resume
 def extract_skills(text):
     skill_keywords = {
         "python", "sql", "mysql", "machine learning", "deep learning", "nlp", "data science",
@@ -30,11 +53,11 @@ def extract_skills(text):
         "kubernetes", "docker", "devops", "git", "linux", "bash", "etl", "mongodb", "postgresql",
         "data wrangling", "data preprocessing", "feature engineering", "mlops", "cybersecurity"
     }
-    words = re.findall(r'\b\w+\b', text.lower())
+    words = text.lower().split()
     extracted_skills = set(words).intersection(skill_keywords)
     return extracted_skills
 
-# Extract experience
+# Extract experience from resume
 def extract_experience(text):
     experience_patterns = [r'(\d+)\s*years?', r'(\d+)\s*months?']
     experience = []
@@ -43,7 +66,7 @@ def extract_experience(text):
         experience.extend(matches)
     return experience if experience else ["Not Found"]
 
-# Match Resumes with Job Descriptions
+# Resume Matching Function
 def match_resumes_to_jobs(resume_texts, job_descriptions):
     vectorizer = TfidfVectorizer()
     all_texts = resume_texts + job_descriptions
@@ -67,118 +90,91 @@ def recommend_jobs(extracted_skills, job_df):
     recommended_jobs.sort(key=lambda x: x[2], reverse=True)
     return recommended_jobs
 
-# Create Resume Document
-def create_resume(name, email, phone, skills, experience, summary):
-    doc = docx.Document()
-    doc.add_heading(name, level=1)
-    
-    doc.add_paragraph(f"📧 {email}  |  📞 {phone}")
-    
-    doc.add_heading("Summary", level=2)
-    doc.add_paragraph(summary)
-    
-    doc.add_heading("Skills", level=2)
-    doc.add_paragraph(", ".join(skills))
-    
-    doc.add_heading("Experience", level=2)
-    doc.add_paragraph(f"{experience} years of experience")
-    
-    file_path = "Updated_Resume.docx"
-    doc.save(file_path)
-    return file_path
-
-# Convert DOCX to PDF
-def remove_non_latin1(text):
-    """Removes characters that are not in the Latin-1 encoding range."""
-    return re.sub(r'[^\x00-\xFF]+', '', text)
-
-def convert_docx_to_pdf(docx_path, pdf_path):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    
-    doc = docx.Document(docx_path)
-    for para in doc.paragraphs:
-        # Ensure text is Latin-1 compliant
-        clean_text = remove_non_latin1(para.text)
-        pdf.multi_cell(200, 10, txt=clean_text, align='L')
-    
-    pdf.output(pdf_path)
-    return pdf_path
-
 # Streamlit UI
 st.title("📄 Resume Analyzer & Job Matching")
 
-uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
+# Sidebar options
+# Sidebar options (Add an empty option as the first choice)
+option = st.sidebar.radio("Choose an option:", ["", "Resume Generator", "Resume Analyzer", "Get Matching Score", "Get Job Recommendations", "Show Visualizations"])
 
-if uploaded_file is not None:
-    resume_text = extract_text_from_pdf(uploaded_file)
+# Ensure the user selects an option before showing content
+if option == "":
+    st.write("👈 Please select an option from the sidebar to proceed.")
+
+# ============================= RESUME GENERATOR =============================
+if option == "Resume Generator":
+    st.subheader("📝 Create a Resume Using Templates")
+
+    # Load available templates
+    if not os.path.exists(TEMPLATE_PATH):
+        os.makedirs(TEMPLATE_PATH)
+
+    templates = [f for f in os.listdir(TEMPLATE_PATH) if f.endswith(".docx")]
     
-    extracted_skills = extract_skills(resume_text)
-    extracted_experience = extract_experience(resume_text)
+    if templates:
+        selected_template = st.selectbox("Select a Resume Template", templates)
 
-    # Sidebar options
-    option = st.sidebar.radio("Choose an option:", ["Resume Builder", "Get Matching Score", "Get Job Recommendations", "Show Visualizations"])
-
-    if option == "Resume Builder":
-        st.subheader("✍️ Edit Your Resume")
-
-        # Editable Inputs
-        name = st.text_input("Full Name", "Your Name")
-        email = st.text_input("Email", "youremail@example.com")
+        # User inputs
+        name = st.text_input("Full Name", "John Doe")
+        email = st.text_input("Email", "john@example.com")
         phone = st.text_input("Phone Number", "123-456-7890")
-        
-        summary = st.text_area("Professional Summary", "Enter a brief summary about yourself.")
-        
-        # Editable skills
-        skill_list = ", ".join(extracted_skills) if extracted_skills else "Enter skills"
-        updated_skills = st.text_area("Skills", skill_list)
-        
-        # Editable experience
-        experience_text = extracted_experience[0] if extracted_experience else "0"
-        updated_experience = st.text_input("Years of Experience", experience_text)
+        skills = st.text_area("Skills", "Python, SQL, Data Science")
+        experience = st.text_area("Experience", "2 years in Data Analysis")
 
-        if st.button("Generate Updated Resume"):
-            docx_path = create_resume(name, email, phone, updated_skills.split(", "), updated_experience, summary)
-            pdf_path = "Updated_Resume.pdf"
-            convert_docx_to_pdf(docx_path, pdf_path)
+        if st.button("Generate Resume"):
+            user_data = {
+                "NAME": name,
+                "EMAIL": email,
+                "PHONE": phone,
+                "SKILLS": skills,
+                "EXPERIENCE": experience
+            }
+
+            # Fill the template
+            template_path = os.path.join(TEMPLATE_PATH, selected_template)
+            updated_doc = fill_template(template_path, user_data)
+
+            # Save the updated DOCX
+            docx_path = "Generated_Resume.docx"
+            updated_doc.save(docx_path)
+
+            # Convert to PDF
+            pdf_path = "Generated_Resume.pdf"
+            convert_docx_to_pdf(updated_doc, pdf_path)
+
+            # Download buttons
+            with open(docx_path, "rb") as docx_file:
+                st.download_button("Download Resume (DOCX)", docx_file, file_name="Generated_Resume.docx")
 
             with open(pdf_path, "rb") as pdf_file:
-                st.download_button("Download Updated Resume (PDF)", pdf_file, file_name="Updated_Resume.pdf")
+                st.download_button("Download Resume (PDF)", pdf_file, file_name="Generated_Resume.pdf")
 
-    elif option == "Get Matching Score":
-        job_description = st.text_area("Paste a Job Description", "")
-        if job_description:
-            similarity_score = match_resumes_to_jobs([resume_text], [job_description])
-            st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
+    else:
+        st.warning("No resume templates found! Please upload DOCX templates in the 'templates/' folder.")
 
-    elif option == "Get Job Recommendations":
-        job_df = load_job_data()
-        recommended_jobs = recommend_jobs(extracted_skills, job_df)
-        st.subheader("Recommended Job Postings")
-        if recommended_jobs:
-            for job, company, match_count, missing_skills in recommended_jobs[:10]:
-                st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
-                st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
-        else:
-            st.write("No suitable job recommendations found.")
+# ============================= RESUME ANALYZER =============================
+elif option == "Resume Analyzer":
+    uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
 
-    elif option == "Show Visualizations":
-        job_df = load_job_data()
-        recommended_jobs = recommend_jobs(extracted_skills, job_df)
-        missing_skills_counter = Counter()
-        for _, _, _, missing_skills in recommended_jobs:
-            missing_skills_counter.update(missing_skills)
+    if uploaded_file is not None:
+        resume_text = extract_text_from_pdf(uploaded_file)
+        extracted_skills = extract_skills(resume_text)
+        extracted_experience = extract_experience(resume_text)
 
-        if missing_skills_counter:
-            fig, ax = plt.subplots()
-            ax.bar(missing_skills_counter.keys(), missing_skills_counter.values(), color="#ff5733")
-            ax.set_xlabel("Missing Skills")
-            ax.set_ylabel("Frequency")
-            ax.set_title("Skills You Need to Improve")
-            plt.xticks(rotation=45)
-            st.pyplot(fig)
-        else:
-            st.write("No missing skills found.")
-else:
-    st.warning("Please upload a resume first.")
+        st.write("**Extracted Skills:**", extracted_skills)
+        st.write("**Extracted Experience:**", extracted_experience)
+
+# ============================= JOB MATCHING =============================
+elif option == "Get Matching Score":
+    job_description = st.text_area("Paste a Job Description", "")
+    if job_description:
+        similarity_score = match_resumes_to_jobs([resume_text], [job_description])
+        st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
+
+elif option == "Get Job Recommendations":
+    job_df = load_job_data()
+    recommended_jobs = recommend_jobs(extracted_skills, job_df)
+    st.subheader("Recommended Job Postings")
+    for job, company, match_count, missing_skills in recommended_jobs[:10]:
+        st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
+        st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
