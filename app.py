@@ -1,6 +1,5 @@
 import streamlit as st
 import docx
-from docx.shared import Pt
 import os
 from fpdf import FPDF
 import PyPDF2
@@ -34,78 +33,9 @@ def convert_docx_to_pdf(doc, pdf_path):
     
     pdf.output(pdf_path)
 
-# Function to extract text from PDF resumes
-def extract_text_from_pdf(pdf_file):
-    text = ""
-    reader = PyPDF2.PdfReader(pdf_file)
-    for page in reader.pages:
-        extracted_text = page.extract_text()
-        if extracted_text:
-            text += extracted_text + " "
-
-    # Debug: Show extracted text
-    st.write("📄 Extracted Resume Text:", text[:500])  # Show first 500 characters
-
-    if not text.strip():
-        st.error("⚠️ No text extracted! Ensure the resume is not image-based.")
-
-    return text
-
-# Extract skills from resume
-def extract_skills(text):
-    skill_keywords = {
-        "python", "sql", "mysql", "machine learning", "deep learning", "nlp", "data science",
-        "data analysis", "excel", "power bi", "tableau", "streamlit", "tensorflow", "pytorch",
-        "azure", "aws", "gcp", "c++", "java", "r", "statistics", "data visualization", "big data",
-        "business intelligence", "cloud computing", "hadoop", "spark", "flask", "django",
-        "kubernetes", "docker", "devops", "git", "linux", "bash", "etl", "mongodb", "postgresql",
-        "data wrangling", "data preprocessing", "feature engineering", "mlops", "cybersecurity"
-    }
-    words = re.findall(r'\b\w+\b', text.lower())  # Extract words properly
-    extracted_skills = set(words).intersection(skill_keywords)
-
-    # Debug: Show matched skills
-    st.write("✅ Extracted Skills:", extracted_skills)
-
-    return extracted_skills
-
-# Extract experience from resume
-def extract_experience(text):
-    experience_patterns = [r'(\d+)\s*years?', r'(\d+)\s*months?']
-    experience = []
-    for pattern in experience_patterns:
-        matches = re.findall(pattern, text.lower())
-        experience.extend(matches)
-    return experience if experience else ["Not Found"]
-
-# Resume Matching Function
-def match_resumes_to_jobs(resume_texts, job_descriptions):
-    vectorizer = TfidfVectorizer()
-    all_texts = resume_texts + job_descriptions
-    tfidf_matrix = vectorizer.fit_transform(all_texts)
-    resume_vectors = tfidf_matrix[:len(resume_texts)]
-    job_vectors = tfidf_matrix[len(resume_texts):]
-    return cosine_similarity(resume_vectors, job_vectors)
-
-@st.cache_data
-def load_job_data():
-    return pd.read_csv("job_descriptions1.csv")
-
-def recommend_jobs(extracted_skills, job_df):
-    recommended_jobs = []
-    
-    for _, job in job_df.iterrows():
-        job_skills = set(map(str.lower, job["skills"].split(", ")))
-
-        match_count = len(job_skills.intersection(extracted_skills))
-        missing_skills = job_skills - extracted_skills
-
-        if match_count > 0:
-            recommended_jobs.append((job["Job Title"], job["Company"], match_count, missing_skills))
-
-    recommended_jobs.sort(key=lambda x: x[2], reverse=True)  # Sort by match count
-    
-    return recommended_jobs
+# Ensure the templates folder exists
+if not os.path.exists(TEMPLATE_PATH):
+    os.makedirs(TEMPLATE_PATH)
 
 # Streamlit UI
 st.title("📄 Resume Analyzer & Job Matching")
@@ -116,10 +46,7 @@ option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Get Matching
 # ============================= RESUME GENERATOR =============================
 if option == "Resume Generator":
     st.subheader("📝 Create a Resume Using Templates")
-
-    if not os.path.exists(TEMPLATE_PATH):
-        os.makedirs(TEMPLATE_PATH)
-
+    
     templates = [f for f in os.listdir(TEMPLATE_PATH) if f.endswith(".docx")]
     
     if templates:
@@ -131,6 +58,8 @@ if option == "Resume Generator":
         phone = st.text_input("Phone Number", "123-456-7890")
         skills = st.text_area("Skills", "Python, SQL, Data Science")
         experience = st.text_area("Experience", "2 years in Data Analysis")
+        education = st.text_area("Education", "Bachelor of Engineering, XYZ University")
+        certifications = st.text_area("Certifications", "PMP, AWS Certified Solutions Architect")
 
         if st.button("Generate Resume"):
             user_data = {
@@ -138,7 +67,9 @@ if option == "Resume Generator":
                 "EMAIL": email,
                 "PHONE": phone,
                 "SKILLS": skills,
-                "EXPERIENCE": experience
+                "EXPERIENCE": experience,
+                "EDUCATION": education,
+                "CERTIFICATIONS": certifications
             }
 
             template_path = os.path.join(TEMPLATE_PATH, selected_template)
@@ -155,7 +86,6 @@ if option == "Resume Generator":
 
             with open(pdf_path, "rb") as pdf_file:
                 st.download_button("Download Resume (PDF)", pdf_file, file_name="Generated_Resume.pdf")
-
     else:
         st.warning("No resume templates found! Please upload DOCX templates in the 'templates/' folder.")
 
