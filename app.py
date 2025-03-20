@@ -99,10 +99,35 @@ def recommend_jobs(extracted_skills, job_df):
     return sorted(recommendations, key=lambda x: x[2], reverse=True)
 
 # Function to extract experience from text
+import re
+
 def extract_experience(text):
-    experience_patterns = [r"(\d+)\s*years? of experience", r"experience\s*of\s*(\d+)\s*years?", r"(\d+)-year experience", r"(\d+)\+?\s*years?"]
-    matches = [int(match.group(1)) for pattern in experience_patterns if (match := re.search(pattern, text, re.IGNORECASE))]
-    return max(matches) if matches else "Experience not found"
+    """
+    Extracts the full experience section from a resume.
+    
+    Parameters:
+    text (str): Resume text.
+    
+    Returns:
+    str: Extracted experience details or 'Experience not found' if not detected.
+    """
+    # Define common headers that indicate work experience sections
+    experience_headers = [
+        "work experience", "professional experience", "employment history",
+        "career summary", "job experience", "experience"
+    ]
+    
+    # Regex pattern to detect experience sections
+    experience_pattern = r"(?:{})\s*(?:[:\-]?\s*)\n?(.*?)(?:\n\s*\n|\Z)".format("|".join(experience_headers))
+
+    # Search for experience sections
+    matches = re.findall(experience_pattern, text, re.IGNORECASE | re.DOTALL)
+
+    if matches:
+        return matches[0].strip()  # Return first match (assuming experience is listed once)
+    
+    return "Experience not found"
+
 
 # Function to convert DOCX to PDF
 def convert_docx_to_pdf(doc, pdf_path):
