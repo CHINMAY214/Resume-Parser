@@ -22,7 +22,7 @@ def fill_template(template_path, user_data):
     return doc
 
 
-def match_resumes_to_jobs(resumes, Job Descriptions):
+def match_resumes_to_jobs(resumes, Job Description):
     """
     Compute similarity scores between resumes and job descriptions using TF-IDF and cosine similarity.
 
