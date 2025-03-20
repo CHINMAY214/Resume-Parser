@@ -11,7 +11,9 @@ from bs4 import BeautifulSoup
 import requests
 import yaml
 import bcrypt
+from pdf2image import convert_from_path
 import io
+from PIL import Image
 
 TEMPLATE_PATH = "templates/"
 
@@ -102,7 +104,22 @@ if st.sidebar.button("Logout"):
     st.session_state.username = ""
     st.rerun()
 
-    
+# ✅ Convert DOCX to PDF, then to Image
+def convert_docx_to_image(docx_path):
+    pdf_path = docx_path.replace(".docx", ".pdf")
+    image_path = docx_path.replace(".docx", ".png")
+
+    # Convert DOCX to PDF (using LibreOffice or other tools)
+    os.system(f"libreoffice --headless --convert-to pdf {docx_path}")
+
+    # Convert PDF to Image
+    images = convert_from_path(pdf_path)
+    if images:
+        images[0].save(image_path, "PNG")  # Save the first page as an image
+        return image_path
+    return None
+
+
 # Function to replace placeholders in a template
 def fill_template(template_path, user_data):
     doc = docx.Document(template_path)
@@ -279,9 +296,20 @@ if option == "Resume Generator":
     templates = [f for f in os.listdir(TEMPLATE_PATH) if f.endswith(".docx")]
     if templates:
         selected_template = st.selectbox("Select a Resume Template", templates)
+        
+        # ✅ Show Template Preview
+        template_path = os.path.join(TEMPLATE_PATH, selected_template)
+        preview_image = convert_docx_to_image(template_path)
+        
+        if preview_image:
+            st.image(preview_image, caption="Template Preview", use_column_width=True)
+        else:
+            st.warning("⚠️ Could not generate a preview for this template.")
+
         user_data = {key: st.text_input(key) for key in ["NAME", "EMAIL", "PHONE", "SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATIONS"]}
+        
         if st.button("Generate Resume"):
-            updated_doc = fill_template(os.path.join(TEMPLATE_PATH, selected_template), user_data)
+            updated_doc = fill_template(template_path, user_data)
             docx_path = "Generated_Resume.docx"
             updated_doc.save(docx_path)
 
@@ -298,6 +326,7 @@ if option == "Resume Generator":
                 st.download_button("Download Resume (PDF)", pdf_bytes, file_name="Generated_Resume.pdf", mime="application/pdf")
     else:
         st.warning("No resume templates found! Upload DOCX templates in 'templates/' folder.")
+
 
 elif option == "Resume Analyzer":
     uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
