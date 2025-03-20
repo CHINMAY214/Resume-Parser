@@ -21,6 +21,14 @@ def fill_template(template_path, user_data):
                 para.text = para.text.replace(f"{{{key}}}", value)
     return doc
 
+
+def extract_text_from_pdf(uploaded_file):
+    pdf_reader = PyPDF2.PdfReader(uploaded_file)
+    text = ""
+    for page in pdf_reader.pages:
+        text += page.extract_text() + "\n"
+    return text
+
 # Function to convert DOCX to PDF
 def convert_docx_to_pdf(doc, pdf_path):
     pdf = FPDF()
