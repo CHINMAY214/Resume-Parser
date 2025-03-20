@@ -58,9 +58,8 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 
 # ============================= LOGIN & SIGN-UP =============================
-st.title("🔐 Login or Sign Up")
-
 if not st.session_state.logged_in:
+    st.title("🔐 Login or Sign Up")
     option = st.radio("Select an option:", ["Login", "Sign Up"])
 
     if option == "Login":
