@@ -10,3 +10,4 @@ python-docx
 fpdf
 beautifulsoup4
 lxml
+bcrypt
