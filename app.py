@@ -9,11 +9,84 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 from bs4 import BeautifulSoup
 import requests
+import bcrypt
 
 TEMPLATE_PATH = "templates/"
 
+# ✅ Load user credentials from YAML file
+def load_credentials():
+    with open("credentials.yaml", "r") as file:
+        return yaml.safe_load(file)
+
+def save_credentials(credentials):
+    with open("credentials.yaml", "w") as file:
+        yaml.dump(credentials, file, default_flow_style=False)
+
+# ✅ Hash passwords before saving
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+# ✅ Function to check login
+def authenticate(username, password):
+    credentials = load_credentials()
+    if username in credentials["credentials"]:
+        stored_password = credentials["credentials"][username]["password"]
+        return bcrypt.checkpw(password.encode(), stored_password.encode())
+    return False
+
+# ✅ Ensure session state variables are always initialized
 if "extracted_skills" not in st.session_state:
     st.session_state.extracted_skills = []
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
+# ============================= LOGIN & SIGN-UP =============================
+st.title("🔐 Login or Sign Up")
+
+if not st.session_state.logged_in:
+    option = st.radio("Select an option:", ["Login", "Sign Up"])
+
+    if option == "Login":
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Login"):
+            if authenticate(username, password):
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.success("✅ Login successful!")
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password!")
+
+    elif option == "Sign Up":
+        new_username = st.text_input("Choose a Username")
+        new_password = st.text_input("Choose a Password", type="password")
+        confirm_password = st.text_input("Confirm Password", type="password")
+
+        if st.button("Sign Up"):
+            if new_password != confirm_password:
+                st.error("❌ Passwords do not match!")
+            else:
+                credentials = load_credentials()
+                if new_username in credentials["credentials"]:
+                    st.error("❌ Username already exists! Choose another.")
+                else:
+                    credentials["credentials"][new_username] = {"password": hash_password(new_password)}
+                    save_credentials(credentials)
+                    st.success("✅ Account created successfully! Please log in.")
+    
+    st.stop()
+
+# ✅ Logout button
+st.sidebar.success(f"👋 Welcome, {st.session_state.username}")
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+    st.rerun()
+
     
 # Function to replace placeholders in a template
 def fill_template(template_path, user_data):
