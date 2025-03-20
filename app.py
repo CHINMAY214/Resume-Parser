@@ -56,6 +56,32 @@ def extract_skills(text):
     return list(extracted_skills)
 
 
+def recommend_jobs(extracted_skills, job_df):
+    """
+    Recommend jobs based on skill matching.
+
+    Parameters:
+    extracted_skills (set): The set of skills extracted from the resume.
+    job_df (DataFrame): A DataFrame containing job listings with 'Skills' column.
+
+    Returns:
+    List of tuples: (Job Title, Company, Matched Skills Count, Missing Skills)
+    """
+    recommendations = []
+
+    for _, row in job_df.iterrows():
+        required_skills = set(row["skills"].split(", "))  # Convert skills string to a set
+        matched_skills = extracted_skills.intersection(required_skills)
+        missing_skills = required_skills - extracted_skills
+
+        if matched_skills:  # Only recommend jobs where at least one skill matches
+            recommendations.append((row["Job Title"], row["Company"], len(matched_skills), missing_skills))
+
+    # Sort recommendations by number of matched skills (descending order)
+    recommendations.sort(key=lambda x: x[2], reverse=True)
+
+    return recommendations
+
 def extract_experience(text):
     experience_patterns = [
         r"(\d+)\s*years? of experience",
