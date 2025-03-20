@@ -21,6 +21,18 @@ def fill_template(template_path, user_data):
                 para.text = para.text.replace(f"{{{key}}}", value)
     return doc
 
+def load_job_data(file_path="job_descriptions.csv"):
+    """
+    Load job listings from a CSV file.
+    The CSV file should have columns: 'Job Title', 'Company', 'Skills Required'.
+    """
+    try:
+        job_df = pd.read_csv(file_path)
+        return job_df
+    except Exception as e:
+        st.error(f"Error loading job data: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame if the file is not found
+
 
 def extract_text_from_pdf(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
