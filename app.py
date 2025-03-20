@@ -42,9 +42,49 @@ def extract_text_from_pdf(uploaded_file):
     return "\n".join([page.extract_text() for page in pdf_reader.pages])
 
 # Function to extract skills from text
+import re
+
 def extract_skills(text):
-    skills_list = ["Python", "SQL", "Machine Learning", "Deep Learning", "Data Science", "Java", "C++", "Cloud Computing",
-                   "AWS", "DevOps", "NLP", "Big Data", "Excel", "Tableau", "Power BI", "TensorFlow", "PyTorch", "R", "Hadoop"]
+    skills_list = [
+        # Software Development
+        "Python", "Java", "C++", "C#", "JavaScript", "TypeScript", "Go", "Swift", "Kotlin", "Ruby", "PHP", "Rust",
+        "HTML", "CSS", "React", "Angular", "Vue.js", "Node.js", "Django", "Flask", "Spring Boot", "Express.js",
+        "Git", "Docker", "Kubernetes", "CI/CD", "Jenkins", "GraphQL", "REST API", "SOAP", "Microservices",
+        
+        # Data Science & AI
+        "Machine Learning", "Deep Learning", "Data Science", "Artificial Intelligence", "NLP", "Computer Vision",
+        "TensorFlow", "PyTorch", "Scikit-Learn", "Pandas", "NumPy", "Matplotlib", "Seaborn", "Keras", "OpenCV",
+        "Big Data", "Hadoop", "Spark", "Apache Kafka", "ETL", "Tableau", "Power BI", "Data Visualization",
+        
+        # Cloud Computing
+        "AWS", "Azure", "Google Cloud", "DevOps", "Cloud Security", "Terraform", "Ansible", "CloudFormation",
+        "Serverless", "Lambda", "EC2", "S3", "Kubernetes", "Cloud Networking",
+        
+        # Cybersecurity
+        "Ethical Hacking", "Penetration Testing", "Malware Analysis", "Network Security", "SIEM", "SOC", 
+        "Firewall Management", "Incident Response", "Cryptography", "Zero Trust Security", "Identity Management",
+        
+        # Business & Management
+        "Agile", "Scrum", "Kanban", "Project Management", "Business Analysis", "Risk Management",
+        "Stakeholder Management", "Product Management", "Lean Methodology", "Six Sigma",
+        
+        # Digital Marketing
+        "SEO", "SEM", "Google Ads", "Facebook Ads", "Social Media Marketing", "Email Marketing",
+        "Marketing Automation", "Content Strategy", "Copywriting", "PPC", "Google Analytics",
+        
+        # Finance & Accounting
+        "Financial Analysis", "Accounting", "Budgeting", "Forecasting", "Investment Analysis",
+        "Risk Assessment", "Auditing", "Taxation", "Excel", "QuickBooks", "SAP",
+        
+        # Networking & IT Support
+        "Network Security", "CCNA", "CCNP", "Routing", "Switching", "LAN", "WAN", "VPN", "TCP/IP",
+        "Linux Administration", "Windows Server", "Active Directory",
+        
+        # Soft Skills
+        "Communication", "Leadership", "Time Management", "Problem Solving", "Critical Thinking",
+        "Teamwork", "Adaptability", "Creativity"
+    ]
+    
     return list(set([word for word in re.findall(r'\b\w+\b', text) if word.lower() in [skill.lower() for skill in skills_list]]))
 
 # Function to recommend jobs based on skills
