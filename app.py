@@ -21,7 +21,7 @@ def fill_template(template_path, user_data):
                 para.text = para.text.replace(f"{{{key}}}", value)
     return doc
 
-def load_job_data(file_path="job_descriptions.csv"):
+def load_job_data(file_path="job_descriptions1.csv"):
     """
     Load job listings from a CSV file.
     The CSV file should have columns: 'Job Title', 'Company', 'Skills Required'.
