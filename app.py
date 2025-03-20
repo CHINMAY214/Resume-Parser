@@ -14,10 +14,24 @@ import bcrypt
 
 TEMPLATE_PATH = "templates/"
 
-# ✅ Load user credentials from YAML file
+import yaml
+import os
+
 def load_credentials():
-    with open("credentials.yaml", "r") as file:
-        return yaml.safe_load(file)
+    credentials_path = "credentials.yaml"
+
+    # ✅ Check if the file exists
+    if not os.path.exists(credentials_path):
+        return {"credentials": {}}  # Return an empty dictionary if the file is missing
+
+    with open(credentials_path, "r") as file:
+        credentials = yaml.safe_load(file) or {}  # Ensure it never returns None
+    
+    # ✅ Ensure it has the expected structure
+    if "credentials" not in credentials:
+        credentials["credentials"] = {}
+
+    return credentials
 
 def save_credentials(credentials):
     with open("credentials.yaml", "w") as file:
