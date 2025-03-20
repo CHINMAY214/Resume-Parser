@@ -18,31 +18,36 @@ def fill_template(template_path, user_data):
             if f"{{{key}}}" in para.text:
                 para.text = para.text.replace(f"{{{key}}}", value)
     return doc
+# Function to scrape jobs from Indeed
+def scrape_indeed_jobs(query, location, num_jobs=5):
+    base_url = f"https://www.indeed.com/jobs?q={query}&l={location}"
+    response = requests.get(base_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    job_list = []
+    
+    for job_card in soup.find_all("div", class_="job_seen_beacon")[:num_jobs]:
+        title = job_card.find("h2").text.strip()
+        company = job_card.find("span", class_="companyName").text.strip()
+        job_link = "https://www.indeed.com" + job_card.find("a")["href"]
+        job_list.append({"title": title, "company": company, "link": job_link})
+    
+    return job_list
 
-# Function to match resumes to job descriptions
-def match_resumes_to_jobs(resumes, job_descriptions):
+# Function to match resume skills with job descriptions
+def match_resumes_to_jobs(resume_skills, job_list):
     vectorizer = TfidfVectorizer()
-    combined_texts = resumes + job_descriptions
+    job_titles = [job["title"] for job in job_list]
+    combined_texts = resume_skills + job_titles
     tfidf_matrix = vectorizer.fit_transform(combined_texts)
-    resume_vectors = tfidf_matrix[:len(resumes)]
-    job_vectors = tfidf_matrix[len(resumes):]
-    return cosine_similarity(resume_vectors, job_vectors)
-
-# Function to load job data
-def load_job_data(file_path="job_descriptions1.csv"):
-    try:
-        return pd.read_csv(file_path)
-    except Exception as e:
-        st.error(f"Error loading job data: {e}")
-        return pd.DataFrame()
+    resume_vector = tfidf_matrix[:len(resume_skills)]
+    job_vectors = tfidf_matrix[len(resume_skills):]
+    similarity_scores = cosine_similarity(resume_vector, job_vectors)
+    return similarity_scores
 
 # Function to extract text from PDF
 def extract_text_from_pdf(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
     return "\n".join([page.extract_text() for page in pdf_reader.pages])
-
-# Function to extract skills from text
-import re
 
 def extract_skills(text):
     skills_list = [
@@ -87,16 +92,6 @@ def extract_skills(text):
     
     return list(set([word for word in re.findall(r'\b\w+\b', text) if word.lower() in [skill.lower() for skill in skills_list]]))
 
-# Function to recommend jobs based on skills
-def recommend_jobs(extracted_skills, job_df):
-    recommendations = []
-    for _, row in job_df.iterrows():
-        required_skills = set(row["skills"].split(", "))
-        matched_skills = extracted_skills.intersection(required_skills)
-        missing_skills = required_skills - extracted_skills
-        if matched_skills:
-            recommendations.append((row["Job Title"], row["Company"], len(matched_skills), missing_skills))
-    return sorted(recommendations, key=lambda x: x[2], reverse=True)
 
 # Function to extract experience from text
 import re
@@ -169,19 +164,18 @@ elif option == "Resume Analyzer":
         st.write("**Extracted Experience:**", extracted_experience)
 
 elif option == "Get Job Recommendations":
-    job_df = load_job_data()
-    if not job_df.empty:
-        extracted_skills = extract_skills(resume_text) if 'resume_text' in locals() else set()
-        recommended_jobs = recommend_jobs(extracted_skills, job_df)
-        st.subheader("Recommended Job Postings")
-        for job, company, match_count, missing_skills in recommended_jobs[:10]:
-            st.write(f"**{job}** at **{company}** - Matched Skills: {match_count}")
-            st.write(f"Missing Skills: {', '.join(missing_skills) if missing_skills else 'None'}")
+    if 'extracted_skills' in locals():
+        location = st.text_input("Enter Location (e.g., New York, Remote)", "Remote")
+        jobs = scrape_indeed_jobs(",".join(extracted_skills), location, num_jobs=5)
+        
+        st.subheader("🔍 Recommended Job Listings")
+        if jobs:
+            for job in jobs:
+                st.write(f"**{job['title']}** at **{job['company']}**")
+                st.markdown(f"[Apply Here]({job['link']})", unsafe_allow_html=True)
+        else:
+            st.warning("No jobs found. Try changing the location.")
     else:
-        st.warning("⚠️ No job data available.")
+        st.warning("Please analyze your resume first.")
 
-elif option == "Get Matching Score":
-    job_description = st.text_area("Paste a Job Description", "")
-    if job_description and 'resume_text' in locals():
-        similarity_score = match_resumes_to_jobs([resume_text], [job_description])
-        st.write(f"Matching Score: {similarity_score[0][0]:.2f}")
+
