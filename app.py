@@ -29,6 +29,20 @@ def extract_text_from_pdf(uploaded_file):
         text += page.extract_text() + "\n"
     return text
 
+
+def extract_skills(text):
+    skills_list = ["Python", "SQL", "Machine Learning", "Deep Learning", "Data Science", "Java", "C++", "Cloud Computing",
+                   "AWS", "DevOps", "NLP", "Big Data", "Excel", "Tableau", "Power BI", "TensorFlow", "PyTorch", "R", "Hadoop"]
+    
+    extracted_skills = set()
+    words = re.findall(r'\b\w+\b', text)  # Tokenize words
+
+    for word in words:
+        if word.lower() in [skill.lower() for skill in skills_list]:
+            extracted_skills.add(word)
+
+    return list(extracted_skills)
+
 # Function to convert DOCX to PDF
 def convert_docx_to_pdf(doc, pdf_path):
     pdf = FPDF()
