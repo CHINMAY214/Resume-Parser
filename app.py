@@ -142,7 +142,7 @@ if not os.path.exists(TEMPLATE_PATH):
     os.makedirs(TEMPLATE_PATH)
 
 st.title("📄 Resume Analyzer & Job Matching")
-option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Get Matching Score", "Get Job Recommendations", "Resume Generator"])
+option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Get Job Recommendations", "Resume Generator"])
 
 if option == "Resume Generator":
     st.subheader("📝 Create a Resume Using Templates")
