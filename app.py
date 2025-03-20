@@ -263,8 +263,15 @@ def convert_docx_to_pdf(doc, pdf_path):
 if not os.path.exists(TEMPLATE_PATH):
     os.makedirs(TEMPLATE_PATH)
 
-st.title("📄 Resume Analyzer & Job Matching")
 option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Get Job Recommendations", "Resume Generator"])
+if option == "Resume Generator":
+    st.title("📝 Generate your own resume")
+
+elif option == "Resume Analyzer":
+    st.title("🛠️ Skills Extractor")
+
+elif option == "Get Job Recommendations":
+    st.title("🔍 Get Job Recommendations")
 
 if option == "Resume Generator":
     st.subheader("📝 Create a Resume Using Templates")
