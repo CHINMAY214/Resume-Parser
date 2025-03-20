@@ -12,6 +12,9 @@ import requests
 
 TEMPLATE_PATH = "templates/"
 
+if "extracted_skills" not in st.session_state:
+    st.session_state.extracted_skills = []
+    
 # Function to replace placeholders in a template
 def fill_template(template_path, user_data):
     doc = docx.Document(template_path)
