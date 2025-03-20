@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import yaml
 import bcrypt
+import io
 
 TEMPLATE_PATH = "templates/"
 
@@ -281,10 +282,20 @@ if option == "Resume Generator":
         user_data = {key: st.text_input(key) for key in ["NAME", "EMAIL", "PHONE", "SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATIONS"]}
         if st.button("Generate Resume"):
             updated_doc = fill_template(os.path.join(TEMPLATE_PATH, selected_template), user_data)
-            updated_doc.save("Generated_Resume.docx")
-            convert_docx_to_pdf(updated_doc, "Generated_Resume.pdf")
-            st.download_button("Download Resume (DOCX)", open("Generated_Resume.docx", "rb"))
-            st.download_button("Download Resume (PDF)", open("Generated_Resume.pdf", "rb"))
+            docx_path = "Generated_Resume.docx"
+            updated_doc.save(docx_path)
+
+            pdf_path = "Generated_Resume.pdf"
+            convert_docx_to_pdf(updated_doc, pdf_path)
+
+            # ✅ Fix file download by using BytesIO
+            with open(docx_path, "rb") as docx_file:
+                docx_bytes = io.BytesIO(docx_file.read())
+                st.download_button("Download Resume (DOCX)", docx_bytes, file_name="Generated_Resume.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+            with open(pdf_path, "rb") as pdf_file:
+                pdf_bytes = io.BytesIO(pdf_file.read())
+                st.download_button("Download Resume (PDF)", pdf_bytes, file_name="Generated_Resume.pdf", mime="application/pdf")
     else:
         st.warning("No resume templates found! Upload DOCX templates in 'templates/' folder.")
 
