@@ -38,6 +38,44 @@ def scrape_indeed_jobs(query, num_jobs=5):
 
     return job_list
 
+# Function to scrape jobs from LinkedIn
+def scrape_linkedin_jobs(query, num_jobs=5):
+    base_url = f"https://www.linkedin.com/jobs/search?keywords={query}"
+    response = requests.get(base_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    job_list = []
+
+    for job_card in soup.find_all("div", class_="base-search-card")[:num_jobs]:
+        title = job_card.find("h3").text.strip()
+        company = job_card.find("h4").text.strip()
+        job_link = job_card.find("a")["href"]
+        job_list.append({"title": title, "company": company, "link": job_link})
+
+    return job_list
+
+# Function to scrape jobs from Glassdoor
+def scrape_glassdoor_jobs(query, num_jobs=5):
+    base_url = f"https://www.glassdoor.com/Job/jobs.htm?sc.keyword={query}"
+    response = requests.get(base_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    job_list = []
+
+    for job_card in soup.find_all("li", class_="react-job-listing")[:num_jobs]:
+        title = job_card.find("a", class_="jobLink").text.strip()
+        company = job_card.find("div", class_="jobHeader").text.strip()
+        job_link = "https://www.glassdoor.com" + job_card.find("a")["href"]
+        job_list.append({"title": title, "company": company, "link": job_link})
+
+    return job_list
+
+# Function to fetch jobs from multiple sources
+def fetch_jobs_from_multiple_sources(query, num_jobs=5):
+    jobs = []
+    jobs.extend(scrape_indeed_jobs(query, num_jobs))
+    jobs.extend(scrape_linkedin_jobs(query, num_jobs))
+    jobs.extend(scrape_glassdoor_jobs(query, num_jobs))
+    return jobs[:num_jobs]
+
 # Function to match resume skills with job descriptions
 def match_resumes_to_jobs(resume_skills, job_list):
     vectorizer = TfidfVectorizer()
@@ -97,9 +135,6 @@ def extract_skills(text):
     
     return list(set([word for word in re.findall(r'\b\w+\b', text) if word.lower() in [skill.lower() for skill in skills_list]]))
 
-
-# Function to extract experience from text
-import re
 
 def extract_experience(text):
     """
@@ -183,9 +218,9 @@ elif option == "Get Job Recommendations":
 
     # ✅ Ensure extracted skills exist before proceeding
     if st.session_state.extracted_skills:
-        jobs = scrape_indeed_jobs(",".join(st.session_state.extracted_skills), num_jobs=5)
+        jobs = fetch_jobs_from_multiple_sources(",".join(st.session_state.extracted_skills), num_jobs=10)
 
-        st.subheader("🔍 Recommended Job Listings")
+        st.subheader("🔍 Recommended Job Listings from Multiple Websites")
         if jobs:
             for job in jobs:
                 st.write(f"**{job['title']}** at **{job['company']}**")
