@@ -11,3 +11,4 @@ fpdf
 beautifulsoup4
 lxml
 bcrypt
+pyyaml
