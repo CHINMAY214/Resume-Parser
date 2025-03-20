@@ -9,6 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 from bs4 import BeautifulSoup
 import requests
+import yaml
 import bcrypt
 
 TEMPLATE_PATH = "templates/"
