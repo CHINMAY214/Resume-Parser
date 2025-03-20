@@ -11,10 +11,6 @@ from bs4 import BeautifulSoup
 
 TEMPLATE_PATH = "templates/"
 
-# Initialize session state
-if "extracted_skills" not in st.session_state:
-    st.session_state.extracted_skills = None
-
 # Function to replace placeholders in a template
 def fill_template(template_path, user_data):
     doc = docx.Document(template_path)
@@ -168,11 +164,20 @@ elif option == "Resume Analyzer":
         st.write("**Extracted Skills:**", extracted_skills)
         st.write("**Extracted Experience:**", extracted_experience)
 
+# ============================= JOB RECOMMENDATIONS =============================
 elif option == "Get Job Recommendations":
-    if 'extracted_skills' in locals():
+    uploaded_file = st.file_uploader("Upload Your Resume (PDF) to Get Job Recommendations", type=["pdf"])
+
+    if uploaded_file:
+        resume_text = extract_text_from_pdf(uploaded_file)
+        extracted_skills = extract_skills(resume_text)
+        st.session_state.extracted_skills = extracted_skills
+        st.write("**Extracted Skills:**", extracted_skills)
+
+    if st.session_state.extracted_skills:
         location = st.text_input("Enter Location (e.g., New York, Remote)", "Remote")
-        jobs = scrape_indeed_jobs(",".join(extracted_skills), location, num_jobs=5)
-        
+        jobs = scrape_indeed_jobs(",".join(st.session_state.extracted_skills), location, num_jobs=5)
+
         st.subheader("🔍 Recommended Job Listings")
         if jobs:
             for job in jobs:
@@ -181,6 +186,6 @@ elif option == "Get Job Recommendations":
         else:
             st.warning("No jobs found. Try changing the location.")
     else:
-        st.warning("Please analyze your resume first.")
+        st.warning("⚠️ Please upload a resume to get job recommendations.")
 
 
