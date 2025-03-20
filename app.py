@@ -21,6 +21,28 @@ def fill_template(template_path, user_data):
                 para.text = para.text.replace(f"{{{key}}}", value)
     return doc
 
+
+def match_resumes_to_jobs(resumes, Job Descriptions):
+    """
+    Compute similarity scores between resumes and job descriptions using TF-IDF and cosine similarity.
+
+    Parameters:
+    resumes (list): A list of resume texts.
+    job_descriptions (list): A list of job descriptions.
+
+    Returns:
+    ndarray: A 2D array of similarity scores between resumes and job descriptions.
+    """
+    vectorizer = TfidfVectorizer()
+    combined_texts = resumes + Job Description  # Combine both lists for fitting
+    tfidf_matrix = vectorizer.fit_transform(combined_texts)
+
+    resume_vectors = tfidf_matrix[:len(resumes)]
+    job_vectors = tfidf_matrix[len(resumes):]
+
+    similarity_scores = cosine_similarity(resume_vectors, job_vectors)
+    return similarity_scores
+
 def load_job_data(file_path="job_descriptions1.csv"):
     """
     Load job listings from a CSV file.
