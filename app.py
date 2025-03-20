@@ -7,8 +7,13 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+from bs4 import BeautifulSoup
 
 TEMPLATE_PATH = "templates/"
+
+# Initialize session state
+if "extracted_skills" not in st.session_state:
+    st.session_state.extracted_skills = None
 
 # Function to replace placeholders in a template
 def fill_template(template_path, user_data):
