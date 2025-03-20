@@ -24,18 +24,18 @@ def fill_template(template_path, user_data):
                 para.text = para.text.replace(f"{{{key}}}", value)
     return doc
 # Function to scrape jobs from Indeed
-def scrape_indeed_jobs(query, location, num_jobs=5):
-    base_url = f"https://www.indeed.com/jobs?q={query}&l={location}"
+def scrape_indeed_jobs(query, num_jobs=5):
+    base_url = f"https://www.indeed.com/jobs?q={query}"
     response = requests.get(base_url)
     soup = BeautifulSoup(response.text, "html.parser")
     job_list = []
-    
+
     for job_card in soup.find_all("div", class_="job_seen_beacon")[:num_jobs]:
         title = job_card.find("h2").text.strip()
         company = job_card.find("span", class_="companyName").text.strip()
         job_link = "https://www.indeed.com" + job_card.find("a")["href"]
         job_list.append({"title": title, "company": company, "link": job_link})
-    
+
     return job_list
 
 # Function to match resume skills with job descriptions
@@ -175,12 +175,15 @@ elif option == "Get Job Recommendations":
     if uploaded_file:
         resume_text = extract_text_from_pdf(uploaded_file)
         extracted_skills = extract_skills(resume_text)
+
+        # ✅ Store extracted skills in session state
         st.session_state.extracted_skills = extracted_skills
+
         st.write("**Extracted Skills:**", extracted_skills)
 
+    # ✅ Ensure extracted skills exist before proceeding
     if st.session_state.extracted_skills:
-        location = st.text_input("Enter Location (e.g., New York, Remote)", "Remote")
-        jobs = scrape_indeed_jobs(",".join(st.session_state.extracted_skills), location, num_jobs=5)
+        jobs = scrape_indeed_jobs(",".join(st.session_state.extracted_skills), num_jobs=5)
 
         st.subheader("🔍 Recommended Job Listings")
         if jobs:
@@ -188,7 +191,7 @@ elif option == "Get Job Recommendations":
                 st.write(f"**{job['title']}** at **{job['company']}**")
                 st.markdown(f"[Apply Here]({job['link']})", unsafe_allow_html=True)
         else:
-            st.warning("No jobs found. Try changing the location.")
+            st.warning("No jobs found based on your skills.")
     else:
         st.warning("⚠️ Please upload a resume to get job recommendations.")
 
