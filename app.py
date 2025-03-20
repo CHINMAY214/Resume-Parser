@@ -43,6 +43,26 @@ def extract_skills(text):
 
     return list(extracted_skills)
 
+
+def extract_experience(text):
+    experience_patterns = [
+        r"(\d+)\s*years? of experience",
+        r"experience\s*of\s*(\d+)\s*years?",
+        r"(\d+)-year experience",
+        r"(\d+)\+?\s*years?"
+    ]
+    
+    matches = []
+    for pattern in experience_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            matches.append(match.group(1))  # Extract the experience value
+
+    if matches:
+        return max(map(int, matches))  # Return the highest experience found
+    else:
+        return "Experience not found"
+
 # Function to convert DOCX to PDF
 def convert_docx_to_pdf(doc, pdf_path):
     pdf = FPDF()
