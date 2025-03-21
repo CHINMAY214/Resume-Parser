@@ -16,10 +16,67 @@ import io
 from PIL import Image
 
 TEMPLATE_PATH = "templates/"
+st.markdown(
+    """
+    <style>
+        /* Apply background color */
+        body {
+            background-color: #f4f7f9;
+            font-family: 'Arial', sans-serif;
+        }
 
-import yaml
-import os
+        /* Sidebar styling */
+        .sidebar .sidebar-content {
+            background-color: #2C3E50;
+            color: white;
+        }
 
+        /* Headings */
+        h1, h2, h3 {
+            color: #2C3E50;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Buttons */
+        .stButton>button {
+            background-color: #27ae60;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        .stButton>button:hover {
+            background-color: #2ecc71;
+        }
+
+        /* Cards for Resume Sections */
+        .resume-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Download Buttons */
+        .stDownloadButton>button {
+            background-color: #2980b9;
+            color: white;
+            border-radius: 8px;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        .stDownloadButton>button:hover {
+            background-color: #3498db;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 def load_credentials():
     credentials_path = "credentials.yaml"
 
@@ -284,6 +341,8 @@ def convert_docx_to_pdf(doc, pdf_path):
 if not os.path.exists(TEMPLATE_PATH):
     os.makedirs(TEMPLATE_PATH)
 
+# ✅ Sidebar Navigation
+st.sidebar.title("🔍 Navigation")
 option = st.sidebar.radio("Choose an option:", ["Resume Analyzer", "Get Job Recommendations", "Resume Generator"])
 if option == "Resume Generator":
     st.title("📝 Generate your own resume")
