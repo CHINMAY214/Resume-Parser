@@ -104,18 +104,21 @@ if st.sidebar.button("Logout"):
     st.session_state.username = ""
     st.rerun()
 
-# ✅ Convert DOCX to PDF, then to Image
+# ✅ Set the correct Poppler path
+POPPLER_PATH = r"C:\Users\HP\Documents\poppler-24.08.0\Library\bin"  # Update if needed
+
 def convert_docx_to_image(docx_path):
     pdf_path = docx_path.replace(".docx", ".pdf")
     image_path = docx_path.replace(".docx", ".png")
 
-    # Convert DOCX to PDF (using LibreOffice or other tools)
+    # ✅ Convert DOCX to PDF
     os.system(f"libreoffice --headless --convert-to pdf {docx_path}")
 
-    # Convert PDF to Image
-    images = convert_from_path(pdf_path)
+    # ✅ Convert PDF to Image with Poppler path
+    images = convert_from_path(pdf_path, poppler_path=POPPLER_PATH)
+
     if images:
-        images[0].save(image_path, "PNG")  # Save the first page as an image
+        images[0].save(image_path, "PNG")  # Save first page as an image
         return image_path
     return None
 
