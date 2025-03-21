@@ -302,12 +302,12 @@ if option == "Resume Generator":
         
         # ✅ Show Template Preview
         template_path = os.path.join(TEMPLATE_PATH, selected_template)
-        preview_image = convert_docx_to_image(template_path)
+        # preview_image = convert_docx_to_image(template_path)
         
-        if preview_image:
-            st.image(preview_image, caption="Template Preview", use_column_width=True)
-        else:
-            st.warning("⚠️ Could not generate a preview for this template.")
+        # if preview_image:
+        #    st.image(preview_image, caption="Template Preview", use_column_width=True)
+        # else:
+          #  st.warning("⚠️ Could not generate a preview for this template.")
 
         user_data = {key: st.text_input(key) for key in ["NAME", "EMAIL", "PHONE", "SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATIONS"]}
         
