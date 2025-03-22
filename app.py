@@ -115,10 +115,7 @@ else:
         """,
         unsafe_allow_html=True
     )
-
-# ✅ Example Content (This will remain in your app)
-st.title("🔍 Resume Builder & Job Matcher")
-st.subheader("This app now supports Dark & Light mode! 🌗")
+    
 def load_credentials():
     credentials_path = "credentials.yaml"
 
