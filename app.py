@@ -339,7 +339,18 @@ def extract_skills(text):
     
     return list(set([word for word in re.findall(r'\b\w+\b', text) if word.lower() in [skill.lower() for skill in skills_list]]))
 
-
+def display_resume_preview(user_data):
+    st.markdown("### 📄 Live Resume Preview")
+    st.markdown("---")
+    st.markdown(f"**👤 Name:** {user_data.get('NAME', 'Your Name')}")
+    st.markdown(f"📧 **Email:** {user_data.get('EMAIL', 'your.email@example.com')}")
+    st.markdown(f"📞 **Phone:** {user_data.get('PHONE', '123-456-7890')}")
+    st.markdown(f"🎓 **Education:** {user_data.get('EDUCATION', 'Your Degree, University Name')}")
+    st.markdown(f"💼 **Experience:** {user_data.get('EXPERIENCE', 'Your work experience details...')}")
+    st.markdown(f"🛠 **Skills:** {user_data.get('SKILLS', 'List your skills...')}")
+    st.markdown(f"🏆 **Certifications:** {user_data.get('CERTIFICATIONS', 'Your certifications...')}")
+    st.markdown("---")
+    
 def extract_experience(text):
     """
     Extracts the full experience section from a resume.
@@ -409,6 +420,9 @@ if option == "Resume Generator":
 
         user_data = {key: st.text_input(key) for key in ["NAME", "EMAIL", "PHONE", "SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATIONS"]}
         
+        # Display Live Resume Preview
+        display_resume_preview(user_data)
+
         if st.button("Generate Resume"):
             updated_doc = fill_template(template_path, user_data)
             docx_path = "Generated_Resume.docx"
