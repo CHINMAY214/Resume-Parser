@@ -77,6 +77,48 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "light"  # Default to light mode
+
+# ✅ Toggle function
+def toggle_theme():
+    st.session_state.theme_mode = "dark" if st.session_state.theme_mode == "light" else "light"
+
+# ✅ Sidebar: Theme Toggle Button
+st.sidebar.markdown("### 🎨 Theme Settings")
+st.sidebar.button("🌗 Toggle Dark/Light Mode", on_click=toggle_theme)
+
+# ✅ Apply custom CSS based on theme selection
+if st.session_state.theme_mode == "dark":
+    st.markdown(
+        """
+        <style>
+            body { background-color: #2C3E50; color: white; }
+            .sidebar .sidebar-content { background-color: #1E2A38; color: white; }
+            h1, h2, h3 { color: #F1C40F; }
+            .stButton>button { background-color: #E74C3C; color: white; }
+            .stButton>button:hover { background-color: #C0392B; }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        """
+        <style>
+            body { background-color: #F4F7F9; color: black; }
+            .sidebar .sidebar-content { background-color: #FFFFFF; color: black; }
+            h1, h2, h3 { color: #2C3E50; }
+            .stButton>button { background-color: #27AE60; color: white; }
+            .stButton>button:hover { background-color: #2ECC71; }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# ✅ Example Content (This will remain in your app)
+st.title("🔍 Resume Builder & Job Matcher")
+st.subheader("This app now supports Dark & Light mode! 🌗")
 def load_credentials():
     credentials_path = "credentials.yaml"
 
