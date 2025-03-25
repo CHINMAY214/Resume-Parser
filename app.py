@@ -393,46 +393,35 @@ import re
 
 def extract_experience(text):
     """
-    Extracts work experience details from a resume using different patterns.
+    Extracts the number of years of experience from a resume text.
 
     Parameters:
     text (str): Resume text.
 
     Returns:
-    dict: Extracted experience details including roles, companies, and duration.
+    int: Extracted years of experience or 0 if not detected.
     """
-    experience_data = {"Roles": [], "Companies": [], "Total Experience": "Not found"}
-
-    # ✅ 1️⃣ Search for standard experience section headers
+    # Define common headers that indicate work experience sections
     experience_headers = [
-        "work experience", "professional experience", "employment history",
+        "Work Experience/Internships","work experience", "professional experience", "employment history",
         "career summary", "job experience", "experience"
     ]
+
+    # Regex pattern to detect experience section
     experience_pattern = r"(?:{})\s*(?:[:\-]?\s*)\n?(.*?)(?:\n\s*\n|\Z)".format("|".join(experience_headers))
     matches = re.findall(experience_pattern, text, re.IGNORECASE | re.DOTALL)
 
-    extracted_text = matches[0].strip() if matches else text  # Default to full text if no section found
+    if matches:
+        experience_section = matches[0].strip()  # Extracted Experience Text
+        
+        # ✅ Extract years from the experience section
+        years_pattern = r"(\d+)\s*(?:years?|yrs?)"
+        years_match = re.findall(years_pattern, experience_section, re.IGNORECASE)
 
-    # ✅ 2️⃣ Extract job roles and companies
-    job_pattern = re.findall(r"([A-Z][a-zA-Z\s]+)\s+at\s+([A-Z][a-zA-Z\s]+)", extracted_text)
-    for role, company in job_pattern:
-        experience_data["Roles"].append(role.strip())
-        experience_data["Companies"].append(company.strip())
+        if years_match:
+            return max(map(int, years_match))  # Return the highest number of years found
 
-    # ✅ 3️⃣ Extract duration (years of experience)
-    duration_pattern = re.findall(r"(\d{4})\s*[-–]\s*(\d{4}|Present)", extracted_text, re.IGNORECASE)
-    total_years = 0
-
-    for start, end in duration_pattern:
-        if end.lower() == "present":
-            end = 2024  # Assume current year if "Present"
-        total_years += int(end) - int(start)
-
-    if total_years > 0:
-        experience_data["Total Experience"] = f"{total_years} years"
-
-    return experience_data
-
+    return 0  # Return 0 if no years are found
 
 # Function to convert DOCX to PDF
 def convert_docx_to_pdf(doc, pdf_path):
