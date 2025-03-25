@@ -391,37 +391,57 @@ def display_resume_preview(user_data):
     
 import re
 
+import re
+
 def extract_experience(text):
     """
-    Extracts the number of years of experience from a resume text.
+    Extracts the full experience section and calculates years of experience.
 
     Parameters:
     text (str): Resume text.
 
     Returns:
-    int: Extracted years of experience or 0 if not detected.
+    dict: {
+        "experience_text": Full extracted experience section or "Experience not found",
+        "years_of_experience": Number of years found (int, default 0)
+    }
     """
-    # Define common headers that indicate work experience sections
+
+    # ✅ Define common headers that indicate work experience sections
     experience_headers = [
-        "Work Experience/Internships","work experience", "professional experience", "employment history",
-        "career summary", "job experience", "experience"
+        "Work Experience/Internships", "work experience", "professional experience", 
+        "employment history", "career summary", "job experience", "experience"
     ]
 
-    # Regex pattern to detect experience section
+    # ✅ Regex pattern to detect the experience section
     experience_pattern = r"(?:{})\s*(?:[:\-]?\s*)\n?(.*?)(?:\n\s*\n|\Z)".format("|".join(experience_headers))
     matches = re.findall(experience_pattern, text, re.IGNORECASE | re.DOTALL)
 
-    if matches:
-        experience_section = matches[0].strip()  # Extracted Experience Text
-        
-        # ✅ Extract years from the experience section
-        years_pattern = r"(\d+)\s*(?:years?|yrs?)"
-        years_match = re.findall(years_pattern, experience_section, re.IGNORECASE)
+    extracted_experience = matches[0].strip() if matches else "Experience not found"
 
-        if years_match:
-            return max(map(int, years_match))  # Return the highest number of years found
+    # ✅ Extract number of years from the experience section
+    years_pattern = r"(\d+)\s*(?:years?|yrs?)"
+    years_match = re.findall(years_pattern, extracted_experience, re.IGNORECASE)
 
-    return 0  # Return 0 if no years are found
+    years_of_experience = max(map(int, years_match)) if years_match else 0  # Take the highest year found
+
+    return {
+        "experience_text": extracted_experience,
+        "years_of_experience": years_of_experience
+    }
+
+# ✅ Example Usage:
+resume_text = """ 
+Work Experience
+Software Engineer at XYZ Corp (2018 - Present)
+- Developed machine learning models for fraud detection.
+- Optimized SQL queries to improve database performance.
+- Led a team of 5 developers for AI-driven automation projects.
+Worked as Data Analyst for 3 years in ABC Ltd.
+"""
+extracted_data = extract_experience(resume_text)
+print("Extracted Experience Section:\n", extracted_data["experience_text"])
+print("Extracted Years of Experience:", extracted_data["years_of_experience"])
 
 # Function to convert DOCX to PDF
 def convert_docx_to_pdf(doc, pdf_path):
