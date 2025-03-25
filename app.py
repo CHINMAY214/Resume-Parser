@@ -401,8 +401,8 @@ def extract_experience(text):
     """
     # Define common headers that indicate work experience sections
     experience_headers = [
-        "work experience", "professional experience", "employment history",
-        "career summary", "job experience", "experience"
+        "Work experience", "professional experience", "employment history",
+        "career summary", "job experience", "experience","Work Experience/Internships"
     ]
 
     # Regex pattern to detect experience section
