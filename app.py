@@ -14,8 +14,13 @@ import bcrypt
 from pdf2image import convert_from_path
 import io
 from PIL import Image
+import nltk
+import textstat
+from collections import Counter
+
 
 TEMPLATE_PATH = "templates/"
+nltk.download("punkt")
 st.markdown(
     """
     <style>
@@ -339,6 +344,39 @@ def extract_skills(text):
     
     return list(set([word for word in re.findall(r'\b\w+\b', text) if word.lower() in [skill.lower() for skill in skills_list]]))
 
+
+# ✅ Function to calculate Resume Score
+def score_resume(resume_text, extracted_skills):
+    score = 0
+    total_factors = 5  # Total factors for scoring
+
+    # 1️⃣ **Keyword Matching (20%)**
+    industry_keywords = ["data analysis", "machine learning", "business intelligence", "python", "sql", "power bi", "dashboard", "visualization"]
+    matched_keywords = sum(1 for word in industry_keywords if word.lower() in resume_text.lower())
+    keyword_score = (matched_keywords / len(industry_keywords)) * 20
+
+    # 2️⃣ **Experience Level (20%)**
+    experience_level = extract_experience(resume_text)
+    experience_score = 20 if isinstance(experience_level, int) and experience_level >= 3 else 10 if experience_level >= 1 else 5
+
+    # 3️⃣ **Readability Score (20%)**
+    readability = textstat.flesch_reading_ease(resume_text)
+    readability_score = 20 if readability > 50 else 10 if readability > 30 else 5
+
+    # 4️⃣ **Skill Relevance (20%)**
+    matched_skills = len(set(extracted_skills).intersection(set(industry_keywords)))
+    skill_score = (matched_skills / len(industry_keywords)) * 20
+
+    # 5️⃣ **ATS Compliance (20%)**
+    ats_keywords = ["education", "experience", "skills", "projects", "certifications"]
+    ats_score = sum(1 for word in ats_keywords if word.lower() in resume_text.lower())
+    ats_score = (ats_score / len(ats_keywords)) * 20
+
+    # ✅ Calculate Final Score (Out of 100)
+    final_score = keyword_score + experience_score + readability_score + skill_score + ats_score
+    return round(final_score, 2)
+
+
 def display_resume_preview(user_data):
     st.markdown("### 📄 Live Resume Preview")
     st.markdown("---")
@@ -445,12 +483,27 @@ if option == "Resume Generator":
 
 elif option == "Resume Analyzer":
     uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
+    
     if uploaded_file:
         resume_text = extract_text_from_pdf(uploaded_file)
         extracted_skills = extract_skills(resume_text)
         extracted_experience = extract_experience(resume_text)
+
         st.write("**Extracted Skills:**", extracted_skills)
         st.write("**Extracted Experience:**", extracted_experience)
+
+        # ✅ Calculate Resume Score
+        resume_score = score_resume(resume_text, extracted_skills)
+        st.subheader(f"📊 Your Resume Score: {resume_score}/100")
+
+        # ✅ Show Score Interpretation
+        if resume_score >= 80:
+            st.success("🔥 Excellent Resume! Ready for job applications.")
+        elif resume_score >= 60:
+            st.warning("⚠️ Good Resume! Consider optimizing your skills section.")
+        else:
+            st.error("❌ Your Resume needs improvement. Add more industry keywords & details.")
+
 
 # ============================= JOB RECOMMENDATIONS =============================
 elif option == "Get Job Recommendations":
