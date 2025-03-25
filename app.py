@@ -356,8 +356,9 @@ def score_resume(resume_text, extracted_skills):
     keyword_score = (matched_keywords / len(industry_keywords)) * 20
 
     # 2️⃣ **Experience Level (20%)**
-    experience_level = extract_experience(resume_text)
-    experience_score = 20 if isinstance(experience_level, int) and experience_level >= 3 else 10 if experience_level >= 1 else 5
+    experience_data = extract_experience(resume_text)  # ✅ Get experience text & years
+    experience_years = experience_data["years_of_experience"]  # ✅ Extract only years
+    experience_score = 20 if experience_years >= 3 else 10 if experience_years >= 1 else 5  # ✅ Fix TypeError
 
     # 3️⃣ **Readability Score (20%)**
     readability = textstat.flesch_reading_ease(resume_text)
