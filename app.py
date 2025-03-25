@@ -391,30 +391,35 @@ def display_resume_preview(user_data):
     
 def extract_experience(text):
     """
-    Extracts the full experience section from a resume.
-    
+    Extracts the number of years of experience from a resume text.
+
     Parameters:
     text (str): Resume text.
-    
+
     Returns:
-    str: Extracted experience details or 'Experience not found' if not detected.
+    int: Extracted years of experience or 0 if not detected.
     """
     # Define common headers that indicate work experience sections
     experience_headers = [
         "work experience", "professional experience", "employment history",
         "career summary", "job experience", "experience"
     ]
-    
-    # Regex pattern to detect experience sections
-    experience_pattern = r"(?:{})\s*(?:[:\-]?\s*)\n?(.*?)(?:\n\s*\n|\Z)".format("|".join(experience_headers))
 
-    # Search for experience sections
+    # Regex pattern to detect experience section
+    experience_pattern = r"(?:{})\s*(?:[:\-]?\s*)\n?(.*?)(?:\n\s*\n|\Z)".format("|".join(experience_headers))
     matches = re.findall(experience_pattern, text, re.IGNORECASE | re.DOTALL)
 
     if matches:
-        return matches[0].strip()  # Return first match (assuming experience is listed once)
-    
-    return "Experience not found"
+        experience_section = matches[0].strip()  # Extracted Experience Text
+        
+        # ✅ Extract years from the experience section
+        years_pattern = r"(\d+)\s*(?:years?|yrs?)"
+        years_match = re.findall(years_pattern, experience_section, re.IGNORECASE)
+
+        if years_match:
+            return max(map(int, years_match))  # Return the highest number of years found
+
+    return 0  # Return 0 if no years are found
 
 
 # Function to convert DOCX to PDF
