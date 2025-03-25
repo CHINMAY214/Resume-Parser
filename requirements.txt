@@ -14,3 +14,5 @@ bcrypt
 pyyaml
 pdf2image
 pillow
+nltk
+textstat
