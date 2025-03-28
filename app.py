@@ -183,7 +183,13 @@ if not st.session_state.logged_in:  # Show login options only if the user is not
 
     with col3:
         if st.button("Login with Google (Auth0)"):
-            st.session_state.auth_option = "auth0"
+            AUTH_URL = f"https://{auth0_config.AUTH0_DOMAIN}/authorize"
+            login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
+
+            # Redirect user automatically using JavaScript
+            st.markdown(f"""
+                <meta http-equiv="refresh" content="0; url={login_url}">
+            """, unsafe_allow_html=True)
 
     # Normal login form
     if st.session_state.get("auth_option") == "login":
@@ -217,15 +223,7 @@ if not st.session_state.logged_in:  # Show login options only if the user is not
                     save_credentials(credentials)
                     st.success("✅ Account created successfully! Please log in.")
 
-    # Auth0 Google Login
-    elif st.session_state.get("auth_option") == "auth0":
-        AUTH_URL = f"https://{auth0_config.AUTH0_DOMAIN}/authorize"
-        login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
-
-        st.markdown(f"🔗 Click [here]({login_url}) to login with Google")
-
     st.stop()
-
 # ✅ Logout button
 st.sidebar.success(f"👋 Welcome, {st.session_state.username}")
 if st.sidebar.button("Logout"):
