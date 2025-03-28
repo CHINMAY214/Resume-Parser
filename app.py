@@ -17,6 +17,7 @@ from PIL import Image
 import nltk
 import textstat
 from collections import Counter
+import auth0_config
 
 
 TEMPLATE_PATH = "templates/"
@@ -120,6 +121,9 @@ else:
         """,
         unsafe_allow_html=True
     )
+
+AUTH_URL = f"https://{auth0_config.AUTH0_DOMAIN}/authorize"
+TOKEN_URL = f"https://{auth0_config.AUTH0_DOMAIN}/oauth/token"
     
 def load_credentials():
     credentials_path = "credentials.yaml"
@@ -164,7 +168,7 @@ if "username" not in st.session_state:
 # ============================= LOGIN & SIGN-UP =============================
 if not st.session_state.logged_in:
     st.title("🔐 Login or Sign Up")
-    option = st.radio("Select an option:", ["Login", "Sign Up"])
+    option = st.radio("Select an option:", ["Login", "Sign Up","Login with Google (Auth0)"])
 
     if option == "Login":
         username = st.text_input("Username")
@@ -195,6 +199,30 @@ if not st.session_state.logged_in:
                     credentials["credentials"][new_username] = {"password": hash_password(new_password)}
                     save_credentials(credentials)
                     st.success("✅ Account created successfully! Please log in.")
+    elif option == "Login with Google (Auth0)":
+    login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
+    st.markdown(f"🔗 Click [here]({login_url}) to login with Google")
+
+    # Handle Auth0 authentication callback
+    query_params = st.experimental_get_query_params()
+    if "code" in query_params:
+        auth_code = query_params["code"][0]
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": auth0_config.CLIENT_ID,
+            "client_secret": auth0_config.CLIENT_SECRET,
+            "code": auth_code,
+            "redirect_uri": auth0_config.REDIRECT_URI,
+        }
+        response = requests.post(TOKEN_URL, data=data)
+        if response.status_code == 200:
+            user_info = response.json()
+            st.session_state.logged_in = True
+            st.session_state.username = user_info.get("email", "Google User")
+            st.success(f"✅ Logged in as {st.session_state.username}")
+            st.rerun()
+        else:
+            st.error("❌ Google login failed!")
     
     st.stop()
 
