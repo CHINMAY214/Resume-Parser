@@ -187,9 +187,14 @@ if not st.session_state.logged_in:  # Show login options only if the user is not
             login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
 
             # Redirect user automatically using JavaScript
-            st.markdown(f"""
-                <meta http-equiv="refresh" content="0; url={login_url}">
-            """, unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <script>
+                    window.location.href = "{login_url}";
+                </script>
+                """,
+                unsafe_allow_html=True,
+            )
 
     # Normal login form
     if st.session_state.get("auth_option") == "login":
