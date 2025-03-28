@@ -200,29 +200,29 @@ if not st.session_state.logged_in:
                     save_credentials(credentials)
                     st.success("✅ Account created successfully! Please log in.")
     elif option == "Login with Google (Auth0)":
-    login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
-    st.markdown(f"🔗 Click [here]({login_url}) to login with Google")
+        login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
+        st.markdown(f"🔗 Click [here]({login_url}) to login with Google")
 
-    # Handle Auth0 authentication callback
-    query_params = st.experimental_get_query_params()
-    if "code" in query_params:
-        auth_code = query_params["code"][0]
-        data = {
-            "grant_type": "authorization_code",
-            "client_id": auth0_config.CLIENT_ID,
-            "client_secret": auth0_config.CLIENT_SECRET,
-            "code": auth_code,
-            "redirect_uri": auth0_config.REDIRECT_URI,
-        }
-        response = requests.post(TOKEN_URL, data=data)
-        if response.status_code == 200:
-            user_info = response.json()
-            st.session_state.logged_in = True
-            st.session_state.username = user_info.get("email", "Google User")
-            st.success(f"✅ Logged in as {st.session_state.username}")
-            st.rerun()
-        else:
-            st.error("❌ Google login failed!")
+        # Handle Auth0 authentication callback
+        query_params = st.experimental_get_query_params()
+        if "code" in query_params:
+            auth_code = query_params["code"][0]
+            data = {
+                "grant_type": "authorization_code",
+                "client_id": auth0_config.CLIENT_ID,
+                "client_secret": auth0_config.CLIENT_SECRET,
+                "code": auth_code,
+                "redirect_uri": auth0_config.REDIRECT_URI,
+             }
+            response = requests.post(TOKEN_URL, data=data)
+            if response.status_code == 200:
+                user_info = response.json()
+                st.session_state.logged_in = True
+                st.session_state.username = user_info.get("email", "Google User")
+                st.success(f"✅ Logged in as {st.session_state.username}")
+                st.rerun()
+            else:
+                st.error("❌ Google login failed!")
     
     st.stop()
 
