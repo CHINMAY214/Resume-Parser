@@ -16,3 +16,4 @@ pdf2image
 pillow
 nltk
 textstat
+auth0-python
