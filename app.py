@@ -121,9 +121,6 @@ else:
         """,
         unsafe_allow_html=True
     )
-
-AUTH_URL = f"https://{auth0_config.AUTH0_DOMAIN}/authorize"
-TOKEN_URL = f"https://{auth0_config.AUTH0_DOMAIN}/oauth/token"
     
 def load_credentials():
     credentials_path = "credentials.yaml"
@@ -166,65 +163,73 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 
 # ============================= LOGIN & SIGN-UP =============================
-if not st.session_state.logged_in:
-    st.title("🔐 Login or Sign Up")
-    option = st.radio("Select an option:", ["Login", "Sign Up","Login with Google (Auth0)"])
+# Auth0 URLs
+AUTH_URL = f"https://{auth0_config.AUTH0_DOMAIN}/authorize"
+TOKEN_URL = f"https://{auth0_config.AUTH0_DOMAIN}/oauth/token"
+login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
 
-    if option == "Login":
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+# Buttons for authentication
+col1, col2, col3 = st.columns(3)
+with col1:
+    login_clicked = st.button("Login")
+with col2:
+    signup_clicked = st.button("Sign Up")
+with col3:
+    google_auth_clicked = st.button("Login with Google (Auth0)")
 
-        if st.button("Login"):
-            if authenticate(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.success("✅ Login successful!")
-                st.rerun()
-            else:
-                st.error("❌ Invalid username or password!")
-
-    elif option == "Sign Up":
-        new_username = st.text_input("Choose a Username")
-        new_password = st.text_input("Choose a Password", type="password")
-        confirm_password = st.text_input("Confirm Password", type="password")
-
-        if st.button("Sign Up"):
-            if new_password != confirm_password:
-                st.error("❌ Passwords do not match!")
-            else:
-                credentials = load_credentials()
-                if new_username in credentials["credentials"]:
-                    st.error("❌ Username already exists! Choose another.")
-                else:
-                    credentials["credentials"][new_username] = {"password": hash_password(new_password)}
-                    save_credentials(credentials)
-                    st.success("✅ Account created successfully! Please log in.")
-    elif option == "Login with Google (Auth0)":
-        login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
-        st.markdown(f"🔗 Click [here]({login_url}) to login with Google")
-
-        # Handle Auth0 authentication callback
-        query_params = st.experimental_get_query_params()
-        if "code" in query_params:
-            auth_code = query_params["code"][0]
-            data = {
-                "grant_type": "authorization_code",
-                "client_id": auth0_config.CLIENT_ID,
-                "client_secret": auth0_config.CLIENT_SECRET,
-                "code": auth_code,
-                "redirect_uri": auth0_config.REDIRECT_URI,
-             }
-            response = requests.post(TOKEN_URL, data=data)
-            if response.status_code == 200:
-                user_info = response.json()
-                st.session_state.logged_in = True
-                st.session_state.username = user_info.get("email", "Google User")
-                st.success(f"✅ Logged in as {st.session_state.username}")
-                st.rerun()
-            else:
-                st.error("❌ Google login failed!")
-    
+if google_auth_clicked:
+    st.write(f"🔗 Click [here]({login_url}) to login with Google")
     st.stop()
+
+if login_clicked:
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Submit Login"):
+        if authenticate(username, password):
+            st.session_state.logged_in = True
+            st.session_state.username = username
+            st.success("✅ Login successful!")
+            st.rerun()
+        else:
+            st.error("❌ Invalid username or password!")
+    st.stop()
+
+if signup_clicked:
+    new_username = st.text_input("Choose a Username")
+    new_password = st.text_input("Choose a Password", type="password")
+    confirm_password = st.text_input("Confirm Password", type="password")
+    if st.button("Submit Sign Up"):
+        if new_password != confirm_password:
+            st.error("❌ Passwords do not match!")
+        else:
+            credentials = load_credentials()
+            if new_username in credentials["credentials"]:
+                st.error("❌ Username already exists! Choose another.")
+            else:
+                credentials["credentials"][new_username] = {"password": hash_password(new_password)}
+                save_credentials(credentials)
+                st.success("✅ Account created successfully! Please log in.")
+    st.stop()
+
+# Handling Auth0 login response
+query_params = st.experimental_get_query_params()
+if "code" in query_params:
+    auth_code = query_params["code"][0]
+    data = {
+        "grant_type": "authorization_code",
+        "client_id": auth0_config.CLIENT_ID,
+        "client_secret": auth0_config.CLIENT_SECRET,
+        "code": auth_code,
+        "redirect_uri": auth0_config.REDIRECT_URI,
+    }
+    response = requests.post(TOKEN_URL, data=data)
+    if response.status_code == 200:
+        user_info = response.json()
+        st.session_state.logged_in = True
+        st.session_state.username = user_info.get("email", "Google User")
+        st.success("✅ Login Successful with Google!")
+    else:
+        st.error("❌ Google Login Failed!")
 
 # ✅ Logout button
 st.sidebar.success(f"👋 Welcome, {st.session_state.username}")
