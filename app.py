@@ -198,7 +198,7 @@ if not st.session_state.logged_in:  # Show login options only if the user is not
                 unsafe_allow_html=True,
             )
     if st.session_state.show_login_link:
-        st.markdown(f"🔗 [Click here to login with Google]({LOGIN_URL})")
+        st.markdown(f"🔗 [Click here to login with Google]({login_url})")
 
     # Normal login form
     if st.session_state.get("auth_option") == "login":
