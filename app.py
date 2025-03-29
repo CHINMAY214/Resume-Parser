@@ -161,6 +161,8 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
     st.session_state.username = ""
+if "show_login_link" not in st.session_state:
+    st.session_state.show_login_link = False
 
 # ============================= LOGIN & SIGN-UP =============================
 # Auth0 URLs
@@ -185,7 +187,7 @@ if not st.session_state.logged_in:  # Show login options only if the user is not
         if st.button("Login with Google (Auth0)"):
             AUTH_URL = f"https://{auth0_config.AUTH0_DOMAIN}/authorize"
             login_url = f"{AUTH_URL}?response_type=code&client_id={auth0_config.CLIENT_ID}&redirect_uri={auth0_config.REDIRECT_URI}&scope=openid profile email"
-
+            st.session_state.show_login_link = True
             # Redirect user automatically using JavaScript
             st.markdown(
                 f"""
@@ -195,6 +197,8 @@ if not st.session_state.logged_in:  # Show login options only if the user is not
                 """,
                 unsafe_allow_html=True,
             )
+    if st.session_state.show_login_link:
+        st.markdown(f"🔗 [Click here to login with Google]({LOGIN_URL})")
 
     # Normal login form
     if st.session_state.get("auth_option") == "login":
